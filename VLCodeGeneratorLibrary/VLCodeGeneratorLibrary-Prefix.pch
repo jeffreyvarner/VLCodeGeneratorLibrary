@@ -6,4 +6,10 @@
 
 #ifdef __OBJC__
     #import <Cocoa/Cocoa.h>
+
+    // my headers -
+    #import "VLBlocksAndConstanStrings.h"
+    #import "VLCoreUtilitiesLib.h"
+    #import "VLCodeGenerationFoundationServer.h"
+
 #endif

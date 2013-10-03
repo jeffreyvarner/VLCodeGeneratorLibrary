@@ -14,6 +14,31 @@
 		AD09FB9E17FC755100A4E49F /* libVLCodeGeneratorLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AD09FB8517FC755100A4E49F /* libVLCodeGeneratorLibrary.a */; };
 		AD09FBA417FC755100A4E49F /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBA217FC755100A4E49F /* InfoPlist.strings */; };
 		AD09FBA617FC755100A4E49F /* VLCodeGeneratorLibraryTests.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBA517FC755100A4E49F /* VLCodeGeneratorLibraryTests.m */; };
+		AD09FBB317FC75BF00A4E49F /* VLTransformationServiceVendor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBB117FC75BF00A4E49F /* VLTransformationServiceVendor.m */; };
+		AD09FBB817FC75E900A4E49F /* VLAbstractLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBB617FC75E900A4E49F /* VLAbstractLanguageAdaptor.m */; };
+		AD09FBBF17FC762400A4E49F /* VLCodeGenerationFoundationServer.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBBB17FC762400A4E49F /* VLCodeGenerationFoundationServer.m */; };
+		AD09FBC117FC762400A4E49F /* VLCodeGenerationOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBBD17FC762400A4E49F /* VLCodeGenerationOperation.m */; };
+		AD09FBC817FC763D00A4E49F /* VLBlocksAndConstanStrings.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */; };
+		AD09FBCA17FC763D00A4E49F /* VLCoreUtilitiesLib.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */; };
+		AD09FBCF17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */; };
+		AD09FBE317FCBC1F00A4E49F /* VLBlocksAndConstanStrings.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBC317FC763D00A4E49F /* VLBlocksAndConstanStrings.h */; };
+		AD09FBE417FCBC1F00A4E49F /* VLCoreUtilitiesLib.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */; };
+		AD09FBE517FCBC1F00A4E49F /* VLCodeGenerationFoundationServer.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */; };
+		AD09FBE617FCBC1F00A4E49F /* VLCodeGenerationOperation.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */; };
+		AD09FBE717FCBC1F00A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */; };
+		AD09FBE817FCBC1F00A4E49F /* VLAbstractLanguageAdaptor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; };
+		AD09FBE917FCBC1F00A4E49F /* VLTransformationServiceVendor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */; };
+		AD09FBEA17FCBC1F00A4E49F /* VLCodeGeneratorLibrary.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; };
+		AD09FBEB17FCBC7600A4E49F /* VLBlocksAndConstanStrings.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBC317FC763D00A4E49F /* VLBlocksAndConstanStrings.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBEF17FCBC7600A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +65,22 @@
 		AD09FBA117FC755100A4E49F /* VLCodeGeneratorLibraryTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "VLCodeGeneratorLibraryTests-Info.plist"; sourceTree = "<group>"; };
 		AD09FBA317FC755100A4E49F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		AD09FBA517FC755100A4E49F /* VLCodeGeneratorLibraryTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VLCodeGeneratorLibraryTests.m; sourceTree = "<group>"; };
+		AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLTransformationServiceVendor.h; sourceTree = "<group>"; };
+		AD09FBB117FC75BF00A4E49F /* VLTransformationServiceVendor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLTransformationServiceVendor.m; sourceTree = "<group>"; };
+		AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLAbstractLanguageAdaptor.h; sourceTree = "<group>"; };
+		AD09FBB617FC75E900A4E49F /* VLAbstractLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLAbstractLanguageAdaptor.m; sourceTree = "<group>"; };
+		AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCodeGenerationFoundationServer.h; sourceTree = "<group>"; };
+		AD09FBBB17FC762400A4E49F /* VLCodeGenerationFoundationServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCodeGenerationFoundationServer.m; sourceTree = "<group>"; };
+		AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCodeGenerationOperation.h; sourceTree = "<group>"; };
+		AD09FBBD17FC762400A4E49F /* VLCodeGenerationOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCodeGenerationOperation.m; sourceTree = "<group>"; };
+		AD09FBC317FC763D00A4E49F /* VLBlocksAndConstanStrings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLBlocksAndConstanStrings.h; sourceTree = "<group>"; };
+		AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLBlocksAndConstanStrings.m; sourceTree = "<group>"; };
+		AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCoreUtilitiesLib.h; sourceTree = "<group>"; };
+		AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCoreUtilitiesLib.m; sourceTree = "<group>"; };
+		AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLAbstractPBPKLanguageAdaptor.h; sourceTree = "<group>"; };
+		AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLAbstractPBPKLanguageAdaptor.m; sourceTree = "<group>"; };
+		AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLGSLLanguageAdaptor.h; sourceTree = "<group>"; };
+		AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLGSLLanguageAdaptor.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +147,10 @@
 		AD09FB8E17FC755100A4E49F /* VLCodeGeneratorLibrary */ = {
 			isa = PBXGroup;
 			children = (
+				AD09FBC217FC763100A4E49F /* util */,
+				AD09FBB917FC761100A4E49F /* foundation */,
+				AD09FBB417FC75D400A4E49F /* languages */,
+				AD09FBAF17FC75A800A4E49F /* services */,
 				AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */,
 				AD09FB9217FC755100A4E49F /* VLCodeGeneratorLibrary.m */,
 				AD09FB8F17FC755100A4E49F /* Supporting Files */,
@@ -139,13 +184,74 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
+		AD09FBAF17FC75A800A4E49F /* services */ = {
+			isa = PBXGroup;
+			children = (
+				AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */,
+				AD09FBB117FC75BF00A4E49F /* VLTransformationServiceVendor.m */,
+			);
+			name = services;
+			sourceTree = "<group>";
+		};
+		AD09FBB417FC75D400A4E49F /* languages */ = {
+			isa = PBXGroup;
+			children = (
+				AD09FBCB17FC78D500A4E49F /* gsl_c */,
+				AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */,
+				AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */,
+				AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */,
+				AD09FBB617FC75E900A4E49F /* VLAbstractLanguageAdaptor.m */,
+			);
+			name = languages;
+			sourceTree = "<group>";
+		};
+		AD09FBB917FC761100A4E49F /* foundation */ = {
+			isa = PBXGroup;
+			children = (
+				AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */,
+				AD09FBBB17FC762400A4E49F /* VLCodeGenerationFoundationServer.m */,
+				AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */,
+				AD09FBBD17FC762400A4E49F /* VLCodeGenerationOperation.m */,
+			);
+			name = foundation;
+			sourceTree = "<group>";
+		};
+		AD09FBC217FC763100A4E49F /* util */ = {
+			isa = PBXGroup;
+			children = (
+				AD09FBC317FC763D00A4E49F /* VLBlocksAndConstanStrings.h */,
+				AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */,
+				AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */,
+				AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */,
+			);
+			name = util;
+			sourceTree = "<group>";
+		};
+		AD09FBCB17FC78D500A4E49F /* gsl_c */ = {
+			isa = PBXGroup;
+			children = (
+				AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */,
+				AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */,
+			);
+			name = gsl_c;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
-		AD09FB8317FC755100A4E49F /* Headers */ = {
+		AD09FBDB17FCB99600A4E49F /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */,
+				AD09FBEB17FCBC7600A4E49F /* VLBlocksAndConstanStrings.h in Headers */,
+				AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */,
+				AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */,
+				AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */,
+				AD09FBEF17FCBC7600A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Headers */,
+				AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */,
+				AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */,
+				AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,7 +264,8 @@
 			buildPhases = (
 				AD09FB8117FC755100A4E49F /* Sources */,
 				AD09FB8217FC755100A4E49F /* Frameworks */,
-				AD09FB8317FC755100A4E49F /* Headers */,
+				AD09FBDB17FCB99600A4E49F /* Headers */,
+				AD09FBE217FCBBFB00A4E49F /* Resources */,
 			);
 			buildRules = (
 			);
@@ -223,6 +330,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AD09FBE217FCBBFB00A4E49F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AD09FBE317FCBC1F00A4E49F /* VLBlocksAndConstanStrings.h in Resources */,
+				AD09FBE417FCBC1F00A4E49F /* VLCoreUtilitiesLib.h in Resources */,
+				AD09FBE517FCBC1F00A4E49F /* VLCodeGenerationFoundationServer.h in Resources */,
+				AD09FBE617FCBC1F00A4E49F /* VLCodeGenerationOperation.h in Resources */,
+				AD09FBE717FCBC1F00A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Resources */,
+				AD09FBE817FCBC1F00A4E49F /* VLAbstractLanguageAdaptor.h in Resources */,
+				AD09FBE917FCBC1F00A4E49F /* VLTransformationServiceVendor.h in Resources */,
+				AD09FBEA17FCBC1F00A4E49F /* VLCodeGeneratorLibrary.h in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -230,7 +352,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD09FBBF17FC762400A4E49F /* VLCodeGenerationFoundationServer.m in Sources */,
+				AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */,
+				AD09FBCA17FC763D00A4E49F /* VLCoreUtilitiesLib.m in Sources */,
+				AD09FBB317FC75BF00A4E49F /* VLTransformationServiceVendor.m in Sources */,
+				AD09FBC117FC762400A4E49F /* VLCodeGenerationOperation.m in Sources */,
+				AD09FBCF17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m in Sources */,
+				AD09FBB817FC75E900A4E49F /* VLAbstractLanguageAdaptor.m in Sources */,
 				AD09FB9317FC755100A4E49F /* VLCodeGeneratorLibrary.m in Sources */,
+				AD09FBC817FC763D00A4E49F /* VLBlocksAndConstanStrings.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -337,7 +467,9 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VLCodeGeneratorLibrary/VLCodeGeneratorLibrary-Prefix.pch";
+				PRIVATE_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 			};
 			name = Debug;
 		};
@@ -346,7 +478,9 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VLCodeGeneratorLibrary/VLCodeGeneratorLibrary-Prefix.pch";
+				PRIVATE_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PUBLIC_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 			};
 			name = Release;
 		};
@@ -405,6 +539,7 @@
 				AD09FBAB17FC755100A4E49F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		AD09FBAC17FC755100A4E49F /* Build configuration list for PBXNativeTarget "VLCodeGeneratorLibraryTests" */ = {
 			isa = XCConfigurationList;
@@ -413,6 +548,7 @@
 				AD09FBAE17FC755100A4E49F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
