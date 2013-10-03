@@ -33,7 +33,7 @@
     return @"u_need_2_override_me";
 }
 
--(NSString *)generateModelOperationMassBalancesImplBufferWithOptions:(NSDictionary *)options
+-(NSString *)generateModelMassBalancesImplBufferWithOptions:(NSDictionary *)options
 {
     // force the user to overide -
     [self doesNotRecognizeSelector:_cmd];
@@ -41,7 +41,21 @@
 
 }
 
--(NSString *)generateModelOperationMassBalancesHeaderBufferWithOptions:(NSDictionary *)options
+-(NSString *)generateModelMassBalancesHeaderBufferWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
+
+-(NSString *)generateModelDriverImplBufferWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
+
+-(NSString *)generateModelMakeFileImplBufferWithOptions:(NSDictionary *)options
 {
     // force the user to overide -
     [self doesNotRecognizeSelector:_cmd];

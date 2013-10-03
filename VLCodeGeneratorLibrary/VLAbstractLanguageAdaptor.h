@@ -23,8 +23,13 @@
 -(NSString *)generateModelOperationKineticsHeaderBufferWithOptions:(NSDictionary *)options;
 
 // massbalances -
--(NSString *)generateModelOperationMassBalancesImplBufferWithOptions:(NSDictionary *)options;
--(NSString *)generateModelOperationMassBalancesHeaderBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelMassBalancesImplBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelMassBalancesHeaderBufferWithOptions:(NSDictionary *)options;
 
+// driver -
+-(NSString *)generateModelDriverImplBufferWithOptions:(NSDictionary *)options;
+
+// make -
+-(NSString *)generateModelMakeFileImplBufferWithOptions:(NSDictionary *)options;
 
 @end

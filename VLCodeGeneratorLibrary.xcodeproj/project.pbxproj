@@ -20,12 +20,10 @@
 		AD09FBC117FC762400A4E49F /* VLCodeGenerationOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBBD17FC762400A4E49F /* VLCodeGenerationOperation.m */; };
 		AD09FBC817FC763D00A4E49F /* VLBlocksAndConstanStrings.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */; };
 		AD09FBCA17FC763D00A4E49F /* VLCoreUtilitiesLib.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */; };
-		AD09FBCF17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */; };
 		AD09FBE317FCBC1F00A4E49F /* VLBlocksAndConstanStrings.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBC317FC763D00A4E49F /* VLBlocksAndConstanStrings.h */; };
 		AD09FBE417FCBC1F00A4E49F /* VLCoreUtilitiesLib.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */; };
 		AD09FBE517FCBC1F00A4E49F /* VLCodeGenerationFoundationServer.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */; };
 		AD09FBE617FCBC1F00A4E49F /* VLCodeGenerationOperation.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */; };
-		AD09FBE717FCBC1F00A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */; };
 		AD09FBE817FCBC1F00A4E49F /* VLAbstractLanguageAdaptor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; };
 		AD09FBE917FCBC1F00A4E49F /* VLTransformationServiceVendor.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */; };
 		AD09FBEA17FCBC1F00A4E49F /* VLCodeGeneratorLibrary.h in Resources */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; };
@@ -33,7 +31,6 @@
 		AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AD09FBEF17FCBC7600A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -77,8 +74,6 @@
 		AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLBlocksAndConstanStrings.m; sourceTree = "<group>"; };
 		AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLCoreUtilitiesLib.h; sourceTree = "<group>"; };
 		AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCoreUtilitiesLib.m; sourceTree = "<group>"; };
-		AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLAbstractPBPKLanguageAdaptor.h; sourceTree = "<group>"; };
-		AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLAbstractPBPKLanguageAdaptor.m; sourceTree = "<group>"; };
 		AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLGSLLanguageAdaptor.h; sourceTree = "<group>"; };
 		AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLGSLLanguageAdaptor.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -197,8 +192,6 @@
 			isa = PBXGroup;
 			children = (
 				AD09FBCB17FC78D500A4E49F /* gsl_c */,
-				AD09FBCC17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.h */,
-				AD09FBCD17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m */,
 				AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */,
 				AD09FBB617FC75E900A4E49F /* VLAbstractLanguageAdaptor.m */,
 			);
@@ -248,7 +241,6 @@
 				AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */,
 				AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */,
 				AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */,
-				AD09FBEF17FCBC7600A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Headers */,
 				AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */,
 				AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */,
 				AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */,
@@ -338,7 +330,6 @@
 				AD09FBE417FCBC1F00A4E49F /* VLCoreUtilitiesLib.h in Resources */,
 				AD09FBE517FCBC1F00A4E49F /* VLCodeGenerationFoundationServer.h in Resources */,
 				AD09FBE617FCBC1F00A4E49F /* VLCodeGenerationOperation.h in Resources */,
-				AD09FBE717FCBC1F00A4E49F /* VLAbstractPBPKLanguageAdaptor.h in Resources */,
 				AD09FBE817FCBC1F00A4E49F /* VLAbstractLanguageAdaptor.h in Resources */,
 				AD09FBE917FCBC1F00A4E49F /* VLTransformationServiceVendor.h in Resources */,
 				AD09FBEA17FCBC1F00A4E49F /* VLCodeGeneratorLibrary.h in Resources */,
@@ -357,7 +348,6 @@
 				AD09FBCA17FC763D00A4E49F /* VLCoreUtilitiesLib.m in Sources */,
 				AD09FBB317FC75BF00A4E49F /* VLTransformationServiceVendor.m in Sources */,
 				AD09FBC117FC762400A4E49F /* VLCodeGenerationOperation.m in Sources */,
-				AD09FBCF17FC7BCA00A4E49F /* VLAbstractPBPKLanguageAdaptor.m in Sources */,
 				AD09FBB817FC75E900A4E49F /* VLAbstractLanguageAdaptor.m in Sources */,
 				AD09FB9317FC755100A4E49F /* VLCodeGeneratorLibrary.m in Sources */,
 				AD09FBC817FC763D00A4E49F /* VLBlocksAndConstanStrings.m in Sources */,
