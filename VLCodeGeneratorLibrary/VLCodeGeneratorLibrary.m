@@ -103,15 +103,13 @@
             NSString *transformationName = [[transformation_node attributeForName:@"name"] stringValue];
             
             // prepare message -
-            NSString *message_string = [NSString stringWithFormat:@"Processing transformation %@\n",transformationName];
+            NSString *message_string = [NSString stringWithFormat:@"Processing transformation %@",transformationName];
             [self sendMessage:message_string toNotificationWithName:VLTransformationJobProgressUpdateNotification];
             
             // Setup transformation vendor -
             // First, build the language adaptor -
             NSString *class_string = self.myTransformationLanguageAdaptor;
             VLAbstractLanguageAdaptor *language_adaptor = [[NSClassFromString(class_string) alloc] init];
-            
-            NSLog(@"we are trying to build %@ language_adapter = %@ in %@",class_string,[language_adaptor debugDescription],NSStringFromSelector(_cmd));
             
             // Second, build the transformation service vendor, set some props -
             VLTransformationServiceVendor *transformation_service_vendor = [[VLTransformationServiceVendor alloc] init];

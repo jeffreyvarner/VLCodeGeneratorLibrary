@@ -17,8 +17,14 @@
 
 // general methods for all model types -
 -(NSString *)generateModelDataStructureBufferWithOptions:(NSDictionary *)options;
+
+// kinetics -
 -(NSString *)generateModelOperationKineticsBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelOperationKineticsHeaderBufferWithOptions:(NSDictionary *)options;
+
+// massbalances -
+-(NSString *)generateModelOperationMassBalancesImplBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelOperationMassBalancesHeaderBufferWithOptions:(NSDictionary *)options;
 
 
 @end

@@ -90,15 +90,10 @@
             // lookup the vendor key in myVendorSelector tree -
             NSString *selector_xpath_string = [NSString stringWithFormat:@".//record[@vendor_key='%@']/@selector",vendor_key];
             NSString *selector_string = [[[[weak_self myVendorSelectorTree] nodesForXPath:selector_xpath_string error:&xpath_error] lastObject] stringValue];
-            
-            NSLog(@"vendor_key = %@ selector_string = %@",vendor_key,selector_string);
-            
             if (selector_string!=nil)
             {
                 // get the selector -
                 SEL code_transformation_selector = NSSelectorFromString(selector_string);
-                
-                NSLog(@"Language adaptor = %@",[[self myLanguageAdaptor] debugDescription]);
                 
                 // does the language adaptor have this selector?
                 if ([[weak_self myLanguageAdaptor] respondsToSelector:code_transformation_selector] == YES)
