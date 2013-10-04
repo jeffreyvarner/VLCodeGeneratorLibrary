@@ -95,9 +95,102 @@
         }
     }
     
+    // ok, so let's process the basalGenerationBlock -
+    NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
+    for (NSXMLElement *basal_generation_term in basal_generation_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[basal_generation_term attributeForName:@"compartment"] stringValue];
+        
+        if ([operation_compartment isEqualToString:@"all"] == YES)
+        {
+            
+        }
+        else
+        {
+            NSString *generation_rate_law = [self formulateBasalGenerationRateLawForOperation:basal_generation_term
+                                                                                inCompartment:operation_compartment
+                                                                                  atRateIndex:&rate_counter
+                                                                            andParameterIndex:&parameter_counter];
+            
+            [buffer appendString:generation_rate_law];
+        }
+    }
+    
+    // Last, process the clearance block -
+    NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
+    for (NSXMLElement *basal_clearance_term in basal_clerance_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[basal_clearance_term attributeForName:@"compartment"] stringValue];
+        
+        if ([operation_compartment isEqualToString:@"all"] == YES)
+        {
+            
+        }
+        else
+        {
+            NSString *clearance_rate_law = [self formulateBasalClearanceRateLawForOperation:basal_clearance_term
+                                                                               inCompartment:operation_compartment
+                                                                                 atRateIndex:&rate_counter
+                                                                           andParameterIndex:&parameter_counter];
+            
+            [buffer appendString:clearance_rate_law];
+        }
+    }
+    
     [buffer appendString:@"}\n"];
     
     // return -
+    return [NSString stringWithString:buffer];
+}
+
+-(NSString *)formulateBasalClearanceRateLawForOperation:(NSXMLElement *)operation
+                                           inCompartment:(NSString *)compartment
+                                             atRateIndex:(NSUInteger *)rate_index
+                                       andParameterIndex:(NSUInteger *)parameter_index
+{
+    NSMutableString *buffer = [NSMutableString string];
+    
+    NSString *species = [[operation attributeForName:@"symbol"] stringValue];
+    NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
+    
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    [buffer appendFormat:@"\t/* Basal clerance: %@ */\n",species];
+    [buffer appendFormat:@"\t/* Type: %@ */\n",@"FIRST_ORDER"];
+    [buffer appendFormat:@"\t/* Compartment: %@ */\n",compartment];
+    [buffer appendFormat:@"\t/* index: %lu */\n",*rate_index];
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    [buffer appendFormat:@"\tdouble kCLEARANCE_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
+    [buffer appendFormat:@"\tdbl_tmp = (kCLEARANCE_%@)*%@;\n",species_symbol,species_symbol];
+    [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
+    [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
+    [buffer appendString:@"\n"];
+    
+    return [NSString stringWithString:buffer];
+}
+
+-(NSString *)formulateBasalGenerationRateLawForOperation:(NSXMLElement *)operation
+                                           inCompartment:(NSString *)compartment
+                                             atRateIndex:(NSUInteger *)rate_index
+                                       andParameterIndex:(NSUInteger *)parameter_index
+{
+    NSMutableString *buffer = [NSMutableString string];
+    
+    NSString *species = [[operation attributeForName:@"symbol"] stringValue];
+    
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    [buffer appendFormat:@"\t/* Basal generation: %@ */\n",species];
+    [buffer appendFormat:@"\t/* Type: %@ */\n",@"ZERO_ORDER"];
+    [buffer appendFormat:@"\t/* Compartment: %@ */\n",compartment];
+    [buffer appendFormat:@"\t/* index: %lu */\n",*rate_index];
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    [buffer appendFormat:@"\tdouble GENERATION_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
+    [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
+    [buffer appendFormat:@"%lu,GENERATION_%@_%@);\n",(*rate_index)++,species,compartment];
+    [buffer appendString:@"\n"];
+
+    
     return [NSString stringWithString:buffer];
 }
 
