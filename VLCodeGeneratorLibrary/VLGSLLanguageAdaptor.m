@@ -8,6 +8,8 @@
 
 #import "VLGSLLanguageAdaptor.h"
 
+#define NEW_LINE [buffer appendString:@"\n"]
+
 @implementation VLGSLLanguageAdaptor
 
 #pragma mark - kinetics methods
@@ -28,7 +30,7 @@
     // headers -
     [buffer appendString:@"#include \"Kinetics.h\"\n"];
     [buffer appendString:@"\n"];
-    [buffer appendString:@"static void Kinetics(double t,double const state_vector[], gsl_vector *pRateVector, void* parameter_object)\n"];
+    [buffer appendString:@"void Kinetics(double t,double const state_vector[], gsl_vector *pRateVector, void* parameter_object)\n"];
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\t/* initialize -- */\n"];
     [buffer appendString:@"\tdouble dbl_tmp = 0.0;\n"];
@@ -216,21 +218,28 @@
     [buffer appendString:@"};\n\n"];
     [buffer appendString:@"\n"];
     [buffer appendString:@"/* public methods */\n"];
-    [buffer appendString:@"static void Kinetics(double t,double const state_vector[], gsl_vector *pRateVector, void* parameter_object);\n\n"];
+    [buffer appendString:@"void Kinetics(double t,double const state_vector[], gsl_vector *pRateVector, void* parameter_object);\n\n"];
     [buffer appendString:@"\n"];
 
     // return -
     return [NSString stringWithString:buffer];
 }
 
+
+#pragma mark - mass balances
 -(NSString *)generateModelMassBalancesImplBufferWithOptions:(NSDictionary *)options
 {
     // initialize the buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
     
     // headers -
-    [buffer appendString:@"Yes...."];
+    [buffer appendString:@"#include \"MassBalances.h\"\n"];
+    NEW_LINE;
     
+    [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object)\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\treturn(GSL_SUCCESS);\n"];
+    [buffer appendString:@"}\n"];
     
     // return -
     return [NSString stringWithString:buffer];
@@ -243,7 +252,22 @@
     NSMutableString *buffer = [[NSMutableString alloc] init];
     
     // headers -
-    [buffer appendString:@"No..."];
+    [buffer appendString:@"/* Load the GSL and other headers - */\n"];
+    [buffer appendString:@"#include <stdio.h>\n"];
+    [buffer appendString:@"#include <math.h>\n"];
+    [buffer appendString:@"#include <time.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_errno.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_matrix.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_odeiv.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_vector.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_blas.h>\n\n"];
+    
+    NEW_LINE;
+    [buffer appendString:@"/* Load the model specific headers - */\n"];
+    [buffer appendString:@"#include \"Kinetics.h\"\n"];
+    NEW_LINE;
+    [buffer appendString:@"/* public methods */\n"];
+    [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object);\n"];
     
     
     // return -
@@ -256,14 +280,98 @@
     // initialize the buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
     
-    // headers -
-    [buffer appendString:@"Driver ..."];
+    // main -
+    [buffer appendString:@"/* Load the GSL and other headers - */\n"];
+    [buffer appendString:@"#include <stdio.h>\n"];
+    [buffer appendString:@"#include <math.h>\n"];
+    [buffer appendString:@"#include <time.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_errno.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_matrix.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_odeiv.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_vector.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_blas.h>\n\n"];
     
+    NEW_LINE;
+    [buffer appendString:@"/* Load the model specific headers - */\n"];
+    [buffer appendString:@"#include \"MassBalances.h\"\n"];
+    NEW_LINE;
+
+    [buffer appendString:@"int main(int argc, char* const argv[])\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\treturn 0;\n"];
+    [buffer appendString:@"}\n"];
     
     // return -
     return [NSString stringWithString:buffer];
 }
 
+#pragma mark - make file
+-(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options
+{
+    // initialize the buffer -
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    NSMutableArray *file_name_array = [[NSMutableArray alloc] init];
+    
+    // get trees from the options -
+    __unused NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
+    
+    
+    
+    // build the flags at the beginning -
+    [buffer appendString:@"CFLAGS = -std=c99 -pedantic -v -O2\n"];
+    [buffer appendString:@"CC = gcc\n"];
+    [buffer appendString:@"LFLAGS = /usr/local/lib/libgsl.a /usr/local/lib/libgslcblas.a -lm\n"];
+    NEW_LINE;
+    
+    // Get the list of transformations -
+    NSError *xpath_error;
+    NSArray *transformation_array = [transformation_tree nodesForXPath:@"//Transformation" error:&xpath_error];
+    for (NSXMLElement *transformation in transformation_array)
+    {
+        // get the children -
+        NSString *output_file_name = [[[transformation nodesForXPath:@"./property[@key=\"OUTPUT_FILE_NAME\"]/@value" error:&xpath_error] lastObject] stringValue];
+        
+        // What is the extension?
+        NSString *file_extension = [output_file_name pathExtension];
+        if ([file_extension isEqualToString:@"c"] == YES || [file_extension isEqualToString:@".c"] == YES)
+        {
+            // ok, so grab -
+            NSRange name_range = NSMakeRange(0, [output_file_name length] - 2);
+            NSString *file_name = [output_file_name substringWithRange:name_range];
+            [file_name_array addObject:file_name];
+        }
+    }
+    
+    // write driver target -
+    [buffer appendString:@"Driver: "];
+    for (NSString *file_name in file_name_array)
+    {
+        [buffer appendFormat:@"%@.c ",file_name];
+    }
+    NEW_LINE;
+    
+    // write the compile line -
+    [buffer appendString:@"\t$(CC) $(CCFLAGS) -o Driver "];
+    for (NSString *file_name in file_name_array)
+    {
+        [buffer appendFormat:@"%@.c ",file_name];
+    }
+    [buffer appendString:@"$(LFLAGS)"];
+    NEW_LINE;
+    
+    // write the clean target -
+    [buffer appendString:@"clean:\n\trm -f "];
+    
+    for (NSString *file_name in file_name_array)
+    {
+        [buffer appendFormat:@"%@.o %@ ",file_name,file_name];
+    }
+    NEW_LINE;
+    
+    // return -
+    return [NSString stringWithString:buffer];
+}
 
 
 @end

@@ -30,6 +30,6 @@
 -(NSString *)generateModelDriverImplBufferWithOptions:(NSDictionary *)options;
 
 // make -
--(NSString *)generateModelMakeFileImplBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options;
 
 @end

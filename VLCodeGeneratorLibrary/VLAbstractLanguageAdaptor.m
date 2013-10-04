@@ -55,7 +55,7 @@
     return @"u_need_2_override_me";
 }
 
--(NSString *)generateModelMakeFileImplBufferWithOptions:(NSDictionary *)options
+-(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options
 {
     // force the user to overide -
     [self doesNotRecognizeSelector:_cmd];
