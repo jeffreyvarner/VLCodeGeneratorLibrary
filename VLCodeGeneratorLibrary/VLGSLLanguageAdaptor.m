@@ -463,6 +463,15 @@
     
     // balance -
     [buffer appendFormat:@"\tf[%lu] = ",(*balanceIndex)++];
+    
+    NSString *xpath_input_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfInputs/connection",compartment_string];
+    NSArray *input_array = [circulatoryTree nodesForXPath:xpath_input_string error:nil];
+    for (NSXMLElement *input_node in input_array)
+    {
+        NSString *from_compartment_string = [[input_node attributeForName:@"symbol"] stringValue];
+        [buffer appendFormat:@"(FLOW_IN_%@_%@)*%@_%@ + ",compartment_string,from_compartment_string,species_string,from_compartment_string];
+    }
+    
     NSString *xpath_output_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfOutputs/connection",compartment_string];
     NSArray *output_array = [circulatoryTree nodesForXPath:xpath_output_string error:nil];
     for (NSXMLElement *output_node in output_array)
