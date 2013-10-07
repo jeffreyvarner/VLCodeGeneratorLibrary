@@ -36,6 +36,8 @@
 		AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */; };
+		AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */ = {isa = PBXBuildFile; fileRef = AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */; };
+		AD99741D18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = AD99741B18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,6 +78,8 @@
 		AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLCoreUtilitiesLib.m; sourceTree = "<group>"; };
 		AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLGSLLanguageAdaptor.h; sourceTree = "<group>"; };
 		AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLGSLLanguageAdaptor.m; sourceTree = "<group>"; };
+		AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VLPBPKModelPhysicalParameterCalculator.h; sourceTree = "<group>"; };
+		AD99741B18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VLPBPKModelPhysicalParameterCalculator.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -216,6 +220,8 @@
 				AD09FBC417FC763D00A4E49F /* VLBlocksAndConstanStrings.m */,
 				AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */,
 				AD09FBC617FC763D00A4E49F /* VLCoreUtilitiesLib.m */,
+				AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */,
+				AD99741B18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m */,
 			);
 			name = util;
 			sourceTree = "<group>";
@@ -239,6 +245,7 @@
 				AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */,
 				AD09FBEB17FCBC7600A4E49F /* VLBlocksAndConstanStrings.h in Headers */,
 				AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */,
+				AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */,
 				AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */,
 				AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */,
 				AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */,
@@ -344,6 +351,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AD09FBBF17FC762400A4E49F /* VLCodeGenerationFoundationServer.m in Sources */,
+				AD99741D18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m in Sources */,
 				AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */,
 				AD09FBCA17FC763D00A4E49F /* VLCoreUtilitiesLib.m in Sources */,
 				AD09FBB317FC75BF00A4E49F /* VLTransformationServiceVendor.m in Sources */,

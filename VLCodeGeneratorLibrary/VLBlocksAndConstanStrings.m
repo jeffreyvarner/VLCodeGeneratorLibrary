@@ -15,3 +15,5 @@ NSString *const VLTransformationJobProgressUpdateNotification = @"VLTransformati
 // keys -
 NSString *const kXMLModelTree = @"kXMLModelTree";
 NSString *const kXMLTransformationTree = @"kXMLTransformationTree";
+
+NSString *const kLiverSymbol = @"liver";

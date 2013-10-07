@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "VLPBPKModelPhysicalParameterCalculator.h"
 
 @interface VLAbstractLanguageAdaptor : NSObject
 {
@@ -31,5 +32,15 @@
 
 // make -
 -(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options;
+
+// matrix routines -
+-(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options;
+
+// general methods
+-(NSUInteger)calculateNumberOfStatesInModelTree:(NSXMLDocument *)model_tree;
+-(NSUInteger)calculateNumberOfRatesInModelTree:(NSXMLDocument *)model_tree;
+-(NSUInteger)calculateNumberOfCompartmentsInModelTree:(NSXMLDocument *)model_tree;
+-(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree;
 
 @end

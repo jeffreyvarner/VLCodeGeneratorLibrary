@@ -19,3 +19,6 @@ FOUNDATION_EXPORT NSString *const VLTransformationJobProgressUpdateNotification;
 // keys -
 FOUNDATION_EXPORT NSString *const kXMLModelTree;
 FOUNDATION_EXPORT NSString *const kXMLTransformationTree;
+
+// organs for PBPK models -
+FOUNDATION_EXPORT NSString *const kLiverSymbol;
