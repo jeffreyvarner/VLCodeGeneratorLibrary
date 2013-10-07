@@ -308,7 +308,8 @@
     [buffer appendString:@"struct VLParameters\n"];
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\tgsl_vector *pModelKineticsParameterVector;\n"];
-    [buffer appendString:@"\tgsl_vector *pModelPhysicalParameterVector;\n"];
+    [buffer appendString:@"\tgsl_matrix *pModelCirculationMatrix;\n"];
+    [buffer appendString:@"\tgsl_matrix *pModelStoichiometricMatrix;\n"];
     [buffer appendString:@"};\n\n"];
     [buffer appendString:@"\n"];
     [buffer appendString:@"/* public methods */\n"];
@@ -325,15 +326,13 @@
 {
     // initialize the buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
-    NSUInteger balance_index = 0;
-    NSUInteger physical_parameter_index = 0;
-    NSUInteger state_counter = 0;
     
     // get trees from the options -
     NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
     
     // system dimension?
     NSUInteger NUMBER_OF_RATES = [self calculateNumberOfRatesInModelTree:model_tree];
+    NSUInteger NUMBER_OF_STATES = [self calculateNumberOfStatesInModelTree:model_tree];
     
     // headers -
     [buffer appendString:@"#include \"MassBalances.h\"\n"];
@@ -341,109 +340,176 @@
     
     [buffer appendString:@"/* Problem specific define statements -- */\n"];
     [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
+    [buffer appendFormat:@"#define NUMBER_OF_STATES %lu\n",NUMBER_OF_STATES];
     NEW_LINE;
     
     [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object)\n"];
     [buffer appendString:@"{\n"];
-    [buffer appendString:@"\t/* Evaluate the kinetics */\n"];
+    [buffer appendString:@"\t/* Initialize -- */\n"];
     [buffer appendString:@"\tstruct VLParameters *parameter_struct = (struct VLParameters *)parameter_object;\n"];
     [buffer appendString:@"\tgsl_vector *pRateVector = gsl_vector_alloc(NUMBER_OF_RATES);\n"];
+    [buffer appendString:@"\tgsl_vector *pStateVector = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_vector *pRightHandSideVector = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Evaluate the kinetics -- */\n"];
     [buffer appendString:@"\tKinetics(t,x,pRateVector,parameter_object);\n"];
     NEW_LINE;
-    
-    [buffer appendString:@"\t/* Get the physical parameter vector -- */\n"];
-    [buffer appendString:@"\tgsl_vector *pV = parameter_struct->pModelPhysicalParameterVector;\n"];
+    [buffer appendString:@"\t/* Setup mass balance calculations -- */\n"];
+    [buffer appendString:@"\tgsl_matrix *pStoichiometricMatrix = parameter_struct->pModelStoichiometricMatrix;\n"];
+    [buffer appendString:@"\tgsl_matrix *pCirculationMatrix = parameter_struct->pModelCirculationMatrix;\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Populate the state_vector -- */\n"];
+    [buffer appendString:@"\tfor(int state_index = 0; state_index < NUMBER_OF_STATES; state_index++)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tgsl_vector_set(pRightHandSideVector,state_index,x[state_index]);\n"];
+    [buffer appendString:@"\t}\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Calculate the right hand side -- */\n"];
+    [buffer appendString:@"\tgsl_blas_dgemv(CblasNoTrans,1.0,pStoichiometricMatrix,pRateVector,0.0,pRightHandSideVector);\n"];
+    [buffer appendString:@"\tgsl_blas_dgemv(CblasNoTrans,1.0,pCirculationMatrix,pStateVector,1.0,pRightHandSideVector);\n"];
     NEW_LINE;
     
-    
-    [buffer appendString:@"\t/* Evaluate the balances -- */\n"];
-    [buffer appendString:@"\tdouble dbl_tmp = 0.0;\n"];
+    [buffer appendString:@"\t/* Populate the f[] term -- */\n"];
+    [buffer appendString:@"\tfor(int state_index = 0; state_index < NUMBER_OF_STATES; state_index++)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tf[state_index]=gsl_vector_get(pRightHandSideVector,state_index);\n"];
+    [buffer appendString:@"\t}\n"];
     NEW_LINE;
     
-    // ok, formulate the mass balance equation -
-    NSError *xpath_error;
-    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
-    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
-    
-    [buffer appendString:@"\t/* Alias the species -- */\n"];
-    for (NSXMLElement *compartment in compartment_vector)
-    {
-        // get compartment -
-        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
-        
-        for (NSXMLElement *state in state_vector)
-        {
-            NSString *state_symbol = [[state attributeForName:@"symbol"] stringValue];
-            NSString *final_symbol = [NSString stringWithFormat:@"%@_%@",state_symbol,compartment_symbol];
-            [buffer appendFormat:@"\tdouble %@ = x[%lu];\n",final_symbol,state_counter++];
-        }
-    }
-    
-    [buffer appendString:@"\n"];
-
-    // load the circulatory map -
-    NSXMLDocument *circulation_document;
-    NSString *path_to_mapping_file = [[NSBundle mainBundle] pathForResource:@"Circulation" ofType:@"xml"];
-    if (path_to_mapping_file!=nil)
-    {
-        // load XML file and get output nodes -
-        circulation_document = [VLCoreUtilitiesLib createXMLDocumentFromFile:[NSURL fileURLWithPath:path_to_mapping_file]];
-        
-        for (NSXMLElement *compartment_node in compartment_vector)
-        {
-            // compartment symbol =
-            NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
-            [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
-            [buffer appendFormat:@"\t/* Compartment: %@ */\n",compartment_symbol];
-            [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
-            [buffer appendFormat:@"\tdouble V_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,(physical_parameter_index)++];
-            
-            // find the inputs to this compartment -
-            NSError *xpath_error;
-            NSString *xpath_input_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfInputs/connection",compartment_symbol];
-            NSArray *input_array = [circulation_document nodesForXPath:xpath_input_string error:&xpath_error];
-            for (NSXMLElement *input_node in input_array)
-            {
-                NSString *from_compartment_string = [[input_node attributeForName:@"symbol"] stringValue];
-                [buffer appendFormat:@"\tdouble FLOW_IN_%@_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,from_compartment_string,(physical_parameter_index)++];
-            }
-            
-            NSString *xpath_output_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfOutputs/connection",compartment_symbol];
-            NSArray *output_array = [circulation_document nodesForXPath:xpath_output_string error:&xpath_error];
-            for (NSXMLElement *output_node in output_array)
-            {
-                NSString *from_compartment_string = [[output_node attributeForName:@"symbol"] stringValue];
-                [buffer appendFormat:@"\tdouble FLOW_OUT_%@_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,from_compartment_string,(physical_parameter_index)++];
-            }
-
-
-            
-            for (NSXMLElement *state_node in state_vector)
-            {
-                // balance string -
-                NSString *balance_string = [self formulateBalanceEquationsForCirculatoryMap:circulation_document
-                                                                              withModelTree:model_tree
-                                                                             forCompartment:compartment_node
-                                                                                 forSpecies:state_node
-                                                                             atBalanceIndex:&balance_index
-                                                                   atPhysicalParameterIndex:&physical_parameter_index];
-                
-                // grab -
-                [buffer appendString:balance_string];
-            }
-            
-            NEW_LINE;
-        }
-    }
-
-    
+    [buffer appendString:@"\t/* clean up -- */\n"];
+    [buffer appendString:@"\tgsl_vector_free(pRateVector);\n"];
+    [buffer appendString:@"\tgsl_vector_free(pStateVector);\n"];
+    [buffer appendString:@"\tgsl_vector_free(pRightHandSideVector);\n"];
     [buffer appendString:@"\treturn(GSL_SUCCESS);\n"];
     [buffer appendString:@"}\n"];
     
     // return -
     return [NSString stringWithString:buffer];
-
 }
+
+//-(NSString *)generateModelMassBalancesImplBufferWithOptions:(NSDictionary *)options
+//{
+//    // initialize the buffer -
+//    NSMutableString *buffer = [[NSMutableString alloc] init];
+//    NSUInteger balance_index = 0;
+//    NSUInteger physical_parameter_index = 0;
+//    NSUInteger state_counter = 0;
+//    
+//    // get trees from the options -
+//    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+//    
+//    // system dimension?
+//    NSUInteger NUMBER_OF_RATES = [self calculateNumberOfRatesInModelTree:model_tree];
+//    
+//    // headers -
+//    [buffer appendString:@"#include \"MassBalances.h\"\n"];
+//    NEW_LINE;
+//    
+//    [buffer appendString:@"/* Problem specific define statements -- */\n"];
+//    [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
+//    NEW_LINE;
+//    
+//    [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object)\n"];
+//    [buffer appendString:@"{\n"];
+//    [buffer appendString:@"\t/* Evaluate the kinetics */\n"];
+//    [buffer appendString:@"\tstruct VLParameters *parameter_struct = (struct VLParameters *)parameter_object;\n"];
+//    [buffer appendString:@"\tgsl_vector *pRateVector = gsl_vector_alloc(NUMBER_OF_RATES);\n"];
+//    [buffer appendString:@"\tKinetics(t,x,pRateVector,parameter_object);\n"];
+//    NEW_LINE;
+//    
+//    [buffer appendString:@"\t/* Get the physical parameter vector -- */\n"];
+//    [buffer appendString:@"\tgsl_vector *pV = parameter_struct->pModelPhysicalParameterVector;\n"];
+//    NEW_LINE;
+//    
+//    
+//    [buffer appendString:@"\t/* Evaluate the balances -- */\n"];
+//    [buffer appendString:@"\tdouble dbl_tmp = 0.0;\n"];
+//    NEW_LINE;
+//    
+//    // ok, formulate the mass balance equation -
+//    NSError *xpath_error;
+//    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+//    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+//    
+//    [buffer appendString:@"\t/* Alias the species -- */\n"];
+//    for (NSXMLElement *compartment in compartment_vector)
+//    {
+//        // get compartment -
+//        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
+//        
+//        for (NSXMLElement *state in state_vector)
+//        {
+//            NSString *state_symbol = [[state attributeForName:@"symbol"] stringValue];
+//            NSString *final_symbol = [NSString stringWithFormat:@"%@_%@",state_symbol,compartment_symbol];
+//            [buffer appendFormat:@"\tdouble %@ = x[%lu];\n",final_symbol,state_counter++];
+//        }
+//    }
+//    
+//    [buffer appendString:@"\n"];
+//
+//    // load the circulatory map -
+//    NSXMLDocument *circulation_document;
+//    NSString *path_to_mapping_file = [[NSBundle mainBundle] pathForResource:@"Circulation" ofType:@"xml"];
+//    if (path_to_mapping_file!=nil)
+//    {
+//        // load XML file and get output nodes -
+//        circulation_document = [VLCoreUtilitiesLib createXMLDocumentFromFile:[NSURL fileURLWithPath:path_to_mapping_file]];
+//        
+//        for (NSXMLElement *compartment_node in compartment_vector)
+//        {
+//            // compartment symbol =
+//            NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
+//            [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+//            [buffer appendFormat:@"\t/* Compartment: %@ */\n",compartment_symbol];
+//            [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+//            [buffer appendFormat:@"\tdouble V_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,(physical_parameter_index)++];
+//            
+//            // find the inputs to this compartment -
+//            NSError *xpath_error;
+//            NSString *xpath_input_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfInputs/connection",compartment_symbol];
+//            NSArray *input_array = [circulation_document nodesForXPath:xpath_input_string error:&xpath_error];
+//            for (NSXMLElement *input_node in input_array)
+//            {
+//                NSString *from_compartment_string = [[input_node attributeForName:@"symbol"] stringValue];
+//                [buffer appendFormat:@"\tdouble FLOW_IN_%@_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,from_compartment_string,(physical_parameter_index)++];
+//            }
+//            
+//            NSString *xpath_output_string = [NSString stringWithFormat:@".//organ_model[@symbol='%@']/listOfOutputs/connection",compartment_symbol];
+//            NSArray *output_array = [circulation_document nodesForXPath:xpath_output_string error:&xpath_error];
+//            for (NSXMLElement *output_node in output_array)
+//            {
+//                NSString *from_compartment_string = [[output_node attributeForName:@"symbol"] stringValue];
+//                [buffer appendFormat:@"\tdouble FLOW_OUT_%@_%@ = gsl_vector_get(pV,%lu);\n",compartment_symbol,from_compartment_string,(physical_parameter_index)++];
+//            }
+//
+//
+//            
+//            for (NSXMLElement *state_node in state_vector)
+//            {
+//                // balance string -
+//                NSString *balance_string = [self formulateBalanceEquationsForCirculatoryMap:circulation_document
+//                                                                              withModelTree:model_tree
+//                                                                             forCompartment:compartment_node
+//                                                                                 forSpecies:state_node
+//                                                                             atBalanceIndex:&balance_index
+//                                                                   atPhysicalParameterIndex:&physical_parameter_index];
+//                
+//                // grab -
+//                [buffer appendString:balance_string];
+//            }
+//            
+//            NEW_LINE;
+//        }
+//    }
+//
+//    
+//    [buffer appendString:@"\treturn(GSL_SUCCESS);\n"];
+//    [buffer appendString:@"}\n"];
+//    
+//    // return -
+//    return [NSString stringWithString:buffer];
+//
+//}
 
 -(NSString *)formulateBalanceEquationsForCirculatoryMap:(NSXMLDocument *)circulatoryTree
                                           withModelTree:(NSXMLDocument *)modelTree
@@ -513,6 +579,18 @@
     // return -
     return [NSString stringWithString:buffer];
 
+}
+
+-(NSUInteger)calculateNumberOfStatesInModelTree:(NSXMLDocument *)model_tree
+{
+    NSUInteger number_of_states = 0;
+    NSError *xpath_error;
+    
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    number_of_states = [compartment_vector count]*[state_vector count];
+    
+    return number_of_states;
 }
 
 -(NSUInteger)calculateNumberOfRatesInModelTree:(NSXMLDocument *)model_tree
