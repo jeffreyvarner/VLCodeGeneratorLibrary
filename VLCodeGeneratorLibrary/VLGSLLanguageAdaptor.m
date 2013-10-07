@@ -671,7 +671,7 @@
     [buffer appendString:@"#include <time.h>\n"];
     [buffer appendString:@"#include <gsl/gsl_errno.h>\n"];
     [buffer appendString:@"#include <gsl/gsl_matrix.h>\n"];
-    [buffer appendString:@"#include <gsl/gsl_odeiv.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_odeiv2.h>\n"];
     [buffer appendString:@"#include <gsl/gsl_vector.h>\n"];
     [buffer appendString:@"#include <gsl/gsl_blas.h>\n\n"];
     
@@ -734,6 +734,13 @@
     [buffer appendString:@"\treadGSLMatrixFromFile(pStoichiometricMatrixFile,parameters_object.pModelStoichiometricMatrix);\n"];
     [buffer appendString:@"\treadGSLMatrixFromFile(pCirculationMatrixFile,parameters_object.pModelCirculationMatrix);\n"];
     [buffer appendString:@"\treadGSLVectorFromFile(pInputParametersFile,parameters_object.pModelKineticsParameterVector);\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Setup the GSL solver  -- */\n"];
+    [buffer appendString:@"\tconst gsl_odeiv2_step_type *pT = gsl_odeiv2_step_rk8pd;\n"];
+    [buffer appendString:@"\tgsl_odeiv2_step *pS = gsl_odeiv2_step_alloc(pT,NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_control *pC = gsl_odeiv2_control_y_new(TOLERANCE,TOLERANCE);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_evolve *pE = gsl_odeiv2_evolve_alloc(NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_system sys = {MassBalances,NULL,NUMBER_OF_STATES,&parameters_object};\n\n"];
     NEW_LINE;
     
     // Free gsl data
