@@ -657,6 +657,13 @@
     // initialize the buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
     
+    // get trees from the options -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    
+    // system dimension?
+    NSUInteger NUMBER_OF_RATES = [self calculateNumberOfRatesInModelTree:model_tree];
+    NSUInteger NUMBER_OF_STATES = [self calculateNumberOfStatesInModelTree:model_tree];
+    
     // main -
     [buffer appendString:@"/* Load the GSL and other headers - */\n"];
     [buffer appendString:@"#include <stdio.h>\n"];
@@ -672,10 +679,93 @@
     [buffer appendString:@"/* Load the model specific headers - */\n"];
     [buffer appendString:@"#include \"MassBalances.h\"\n"];
     NEW_LINE;
-
+    [buffer appendString:@"/* Problem specific define statements -- */\n"];
+    [buffer appendString:@"#define NUMBER_OF_ARGUEMENTS 9\n"];
+    [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
+    [buffer appendFormat:@"#define NUMBER_OF_STATES %lu\n",NUMBER_OF_STATES];
+    [buffer appendFormat:@"#define NUMBER_OF_PARAMETERS 100\n"];
+    [buffer appendFormat:@"#define TOLERANCE 1e-6\n"];
+    NEW_LINE;
+    [buffer appendString:@"/* Function prototypes -- */\n"];
+    [buffer appendString:@"static void readGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix);\n"];
+    [buffer appendString:@"static void readGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector);\n"];
+    [buffer appendString:@"static void readDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray);\n"];
+    
+    NEW_LINE;
     [buffer appendString:@"int main(int argc, char* const argv[])\n"];
     [buffer appendString:@"{\n"];
+    [buffer appendString:@"\t/* ====================================================== \n"];
+    [buffer appendString:@"\t * Arguments list:\n"];
+    [buffer appendString:@"\t * 1. Simulation output path \n"];
+    [buffer appendString:@"\t * 2. Path to kinetic parameters \n"];
+    [buffer appendString:@"\t * 3. Path to initial conditions \n"];
+    [buffer appendString:@"\t * 4. Path to stoichiometric matrix \n"];
+    [buffer appendString:@"\t * 5. Path to circulation matrix \n"];
+    [buffer appendString:@"\t * 6. Simulation start time \n"];
+    [buffer appendString:@"\t * 7. Simulation stop time \n"];
+    [buffer appendString:@"\t * 8. Simulation step size \n"];
+    [buffer appendString:@"\t ======================================================= */\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Check number of input arguments -- */\n"];
+    [buffer appendString:@"\tif (argc != NUMBER_OF_ARGUEMENTS)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tprintf(\"Incorrect number of input arguments.\\n\");\n"];
+    [buffer appendString:@"\t\treturn(-1);\n"];
+    [buffer appendString:@"\t}\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Initailize -- */\n"];
+    [buffer appendString:@"\tstruct VLParameters parameters_object;\n"];
+    [buffer appendString:@"\tdouble dblTimeStart,dblTimeStop,dblTimeStep;\n"];
+    [buffer appendString:@"\tchar *pSimulationOutputFile = argv[1];\t\t// Assign data output file\n"];
+    [buffer appendString:@"\tchar *pInputParametersFile = argv[2];\t\t// Get kinetics datafile path \n"];
+    [buffer appendString:@"\tchar *pInputInitialConditionsFile = argv[3];\t\t\t// Get ic datafile patah\n"];
+    [buffer appendString:@"\tchar *pStoichiometricMatrixFile = argv[4];\t\t\t// Get stoichiometric matrix path \n"];
+    [buffer appendString:@"\tchar *pCirculationMatrixFile = argv[5];\t\t\t// Get circulation matrix path \n"];
+    [buffer appendString:@"\tsscanf(argv[6], \"%lf\", &dblTimeStart);\t\t// Start time\n"];
+    [buffer appendString:@"\tsscanf(argv[7], \"%lf\", &dblTimeStop);\t\t// Stop time\n"];
+    [buffer appendString:@"\tsscanf(argv[8], \"%lf\", &dblTimeStep);\t\t\t// Time step size\n\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Allocate space for the system parameters -- */\n"];
+    [buffer appendString:@"\tparameters_object.pModelKineticsParameterVector = gsl_vector_alloc(NUMBER_OF_PARAMETERS);\n"];
+	[buffer appendString:@"\tparameters_object.pModelCirculationMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tparameters_object.pModelStoichiometricMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_RATES);\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* load model parameters and matrices from disk  -- */\n"];
+    [buffer appendString:@"\treadGSLMatrixFromFile(pStoichiometricMatrixFile,parameters_object.pModelStoichiometricMatrix);\n"];
+    [buffer appendString:@"\treadGSLMatrixFromFile(pCirculationMatrixFile,parameters_object.pModelCirculationMatrix);\n"];
+    [buffer appendString:@"\treadGSLVectorFromFile(pInputParametersFile,parameters_object.pModelKineticsParameterVector);\n"];
+    NEW_LINE;
+    
+    // Free gsl data
+    [buffer appendString:@"\t/* clean up -- */\n"];
+	[buffer appendString:@"\tgsl_vector_free(parameters_object.pModelKineticsParameterVector);\n"];
+	[buffer appendString:@"\tgsl_matrix_free(parameters_object.pModelCirculationMatrix);\n"];
+    [buffer appendString:@"\tgsl_matrix_free(parameters_object.pModelStoichiometricMatrix);\n"];
+    NEW_LINE;
+    
     [buffer appendString:@"\treturn 0;\n"];
+    [buffer appendString:@"}\n"];
+    
+    NEW_LINE;
+    [buffer appendString:@"/* Helper functions -- */\n"];
+    [buffer appendString:@"static void readGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix)\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\tFILE *pFile = fopen(pFilename,\"r\");\n"];
+    [buffer appendString:@"\tgsl_matrix_fscanf(pFile,pGSLMatrix);\n"];
+    [buffer appendString:@"\tfclose(pFile);\n"];
+    [buffer appendString:@"}\n"];
+    NEW_LINE;
+    
+    [buffer appendString:@"static void readGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector)\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\tFILE *pFile = fopen(pFilename,\"r\");\n"];
+    [buffer appendString:@"\tgsl_vector_fscanf(pFile,pGSLVector);\n"];
+    [buffer appendString:@"\tfclose(pFile);\n"];
+    [buffer appendString:@"}\n"];
+    NEW_LINE;
+    
+    [buffer appendString:@"static void readDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray)\n"];
+    [buffer appendString:@"{\n"];
     [buffer appendString:@"}\n"];
     
     // return -
