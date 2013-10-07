@@ -22,3 +22,5 @@ FOUNDATION_EXPORT NSString *const kXMLTransformationTree;
 
 // organs for PBPK models -
 FOUNDATION_EXPORT NSString *const kLiverSymbol;
+FOUNDATION_EXPORT NSString *const kKidneySymbol;
+FOUNDATION_EXPORT NSString *const kHeartSymbol;

@@ -75,8 +75,12 @@
     NSUInteger NUMBER_OF_COMPARTMENTS = [self calculateNumberOfCompartmentsInModelTree:model_tree];
     
     // build calculator -
-    VLPBPKModelPhysicalParameterCalculator *calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
+    VLPBPKModelPhysicalParameterCalculator *transport_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
     
+    // get volume of heart, kidney and liver -
+    CGFloat heart_volume = [transport_calculator heartVolume];
+    
+    NSLog(@"heart_volume = %f",heart_volume);
     
     return [NSString stringWithString:buffer];
 }

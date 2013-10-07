@@ -21,11 +21,15 @@
     
     // pbpk model parameters -
     CGFloat _liverVolume;
+    CGFloat _kidneyVolume;
+    CGFloat _heartVolume;
     
 }
 
 // public properties -
 @property (assign) CGFloat liverVolume;
+@property (assign) CGFloat kidneyVolume;
+@property (assign) CGFloat heartVolume;
 
 // custom init -
 +(VLPBPKModelPhysicalParameterCalculator *)buildCalculatorForModelTree:(NSXMLDocument *)modelTree;

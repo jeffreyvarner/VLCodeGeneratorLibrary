@@ -17,3 +17,5 @@ NSString *const kXMLModelTree = @"kXMLModelTree";
 NSString *const kXMLTransformationTree = @"kXMLTransformationTree";
 
 NSString *const kLiverSymbol = @"liver";
+NSString *const kKidneySymbol = @"kidney";
+NSString *const kHeartSymbol = @"heart";

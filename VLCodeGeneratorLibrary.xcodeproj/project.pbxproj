@@ -36,7 +36,7 @@
 		AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */; };
-		AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */ = {isa = PBXBuildFile; fileRef = AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */; };
+		AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */ = {isa = PBXBuildFile; fileRef = AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD99741D18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = AD99741B18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m */; };
 /* End PBXBuildFile section */
 
@@ -242,10 +242,10 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */,
 				AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */,
 				AD09FBEB17FCBC7600A4E49F /* VLBlocksAndConstanStrings.h in Headers */,
 				AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */,
-				AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */,
 				AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */,
 				AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */,
 				AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */,

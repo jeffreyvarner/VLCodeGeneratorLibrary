@@ -56,7 +56,36 @@
     CGFloat body_surface_area = 0.007184*(powf(weight, 0.425)*powf(height_in_cm, 0.725));
     
     // calculate the volume (assume male gender for the moment)
-    volume = (1/TISSUE_DENSITY)*(1/1000.0f)*1.0728*body_surface_area - 345.7;
+    volume = (1.0f/TISSUE_DENSITY)*(1/1000.0f)*1.0728*body_surface_area - 345.7;
+    
+    // return -
+    return volume;
+}
+
+-(CGFloat)calculateKidneyVolumeFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat volume = 0.0f;
+    CGFloat weight = [[self myBodyWeight] floatValue];
+    CGFloat height = [[self myBodyHeight] floatValue];
+    
+    // calculate the kidney volume -
+    volume = (1.0f/TISSUE_DENSITY)*(15.4 + 2.04*weight+51.8*height);
+    
+    // return -
+    return volume;
+}
+
+-(CGFloat)calculateHeartVolumeFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat volume = 0.0f;
+    CGFloat weight = [[self myBodyWeight] floatValue];
+    CGFloat height = [[self myBodyHeight] floatValue];
+    CGFloat height_in_cm = height*100;
+    
+    NSLog(@"w = %f h = %f",weight,height_in_cm);
+    
+    // calculate the kidney volume -
+    volume = (1.0f/TISSUE_DENSITY)*(1.0f/1000.0f)*((22.81*height)*(powf(weight, 0.5)) - 4.15);
     
     // return -
     return volume;
@@ -86,13 +115,23 @@
     for (NSXMLElement *compartment in compartment_vector)
     {
         // Get the symbol for the compartment -
-        NSString *compartment_symbol = [compartment stringValue];
+        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
         
         // process each compartment -
         if ([compartment_symbol isCaseInsensitiveLike:kLiverSymbol] == YES)
         {
             volume = [self calculateLiverVolumeFromModelTree:[self myModelTree]];
             self.liverVolume = volume;
+        }
+        else if ([compartment_symbol isCaseInsensitiveLike:kKidneySymbol] == YES)
+        {
+            volume = [self calculateKidneyVolumeFromModelTree:[self myModelTree]];
+            self.kidneyVolume = volume;
+        }
+        else if ([compartment_symbol isCaseInsensitiveLike:kHeartSymbol] == YES)
+        {
+            volume = [self calculateHeartVolumeFromModelTree:[self myModelTree]];
+            self.heartVolume = volume;
         }
     }
 }
