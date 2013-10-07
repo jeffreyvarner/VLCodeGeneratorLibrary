@@ -687,9 +687,10 @@
     [buffer appendFormat:@"#define TOLERANCE 1e-6\n"];
     NEW_LINE;
     [buffer appendString:@"/* Function prototypes -- */\n"];
-    [buffer appendString:@"static void readGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix);\n"];
-    [buffer appendString:@"static void readGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector);\n"];
-    [buffer appendString:@"static void readDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray);\n"];
+    [buffer appendString:@"static void populateGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix);\n"];
+    [buffer appendString:@"static void populateGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector);\n"];
+    [buffer appendString:@"static void populateDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray);\n"];
+    [buffer appendString:@"static void writeSimulationOutputRecord(FILE *output_file,double time,double *pDoubleResultsArray);\n"];
     
     NEW_LINE;
     [buffer appendString:@"int main(int argc, char* const argv[])\n"];
@@ -715,8 +716,10 @@
     NEW_LINE;
     [buffer appendString:@"\t/* Initailize -- */\n"];
     [buffer appendString:@"\tstruct VLParameters parameters_object;\n"];
-    [buffer appendString:@"\tdouble dblTimeStart,dblTimeStop,dblTimeStep;\n"];
-    [buffer appendString:@"\tchar *pSimulationOutputFile = argv[1];\t\t// Assign data output file\n"];
+    [buffer appendString:@"\tdouble dblTimeStart,dblTimeStop,dblTimeStep,dblTime;\n"];
+    [buffer appendString:@"\tdouble *pStateArray;\n"];
+    [buffer appendString:@"\tFILE *pSimulationOutputFile;\n"];
+    [buffer appendString:@"\tchar *pSimulationOutputFilePath = argv[1];\t\t// Assign data output file\n"];
     [buffer appendString:@"\tchar *pInputParametersFile = argv[2];\t\t// Get kinetics datafile path \n"];
     [buffer appendString:@"\tchar *pInputInitialConditionsFile = argv[3];\t\t\t// Get ic datafile patah\n"];
     [buffer appendString:@"\tchar *pStoichiometricMatrixFile = argv[4];\t\t\t// Get stoichiometric matrix path \n"];
@@ -729,18 +732,45 @@
     [buffer appendString:@"\tparameters_object.pModelKineticsParameterVector = gsl_vector_alloc(NUMBER_OF_PARAMETERS);\n"];
 	[buffer appendString:@"\tparameters_object.pModelCirculationMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_STATES);\n"];
     [buffer appendString:@"\tparameters_object.pModelStoichiometricMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_RATES);\n"];
+    [buffer appendString:@"\tpStateArray = malloc(NUMBER_OF_STATES*sizeof(double));\n"];
     NEW_LINE;
-    [buffer appendString:@"\t/* load model parameters and matrices from disk  -- */\n"];
-    [buffer appendString:@"\treadGSLMatrixFromFile(pStoichiometricMatrixFile,parameters_object.pModelStoichiometricMatrix);\n"];
-    [buffer appendString:@"\treadGSLMatrixFromFile(pCirculationMatrixFile,parameters_object.pModelCirculationMatrix);\n"];
-    [buffer appendString:@"\treadGSLVectorFromFile(pInputParametersFile,parameters_object.pModelKineticsParameterVector);\n"];
+    [buffer appendString:@"\t/* Load model parameters and matrices from disk  -- */\n"];
+    [buffer appendString:@"\tpopulateGSLMatrixFromFile(pStoichiometricMatrixFile,parameters_object.pModelStoichiometricMatrix);\n"];
+    [buffer appendString:@"\tpopulateGSLMatrixFromFile(pCirculationMatrixFile,parameters_object.pModelCirculationMatrix);\n"];
+    [buffer appendString:@"\tpopulateGSLVectorFromFile(pInputParametersFile,parameters_object.pModelKineticsParameterVector);\n"];
+    [buffer appendString:@"\tpopulateDoubleCArraryFromFile(pInputInitialConditionsFile,pStateArray);\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Setup the GSL solver  -- */\n"];
     [buffer appendString:@"\tconst gsl_odeiv2_step_type *pT = gsl_odeiv2_step_rk8pd;\n"];
-    [buffer appendString:@"\tgsl_odeiv2_step *pS = gsl_odeiv2_step_alloc(pT,NUMBER_OF_STATES);\n"];
-    [buffer appendString:@"\tgsl_odeiv2_control *pC = gsl_odeiv2_control_y_new(TOLERANCE,TOLERANCE);\n"];
-    [buffer appendString:@"\tgsl_odeiv2_evolve *pE = gsl_odeiv2_evolve_alloc(NUMBER_OF_STATES);\n"];
-    [buffer appendString:@"\tgsl_odeiv2_system sys = {MassBalances,NULL,NUMBER_OF_STATES,&parameters_object};\n\n"];
+    [buffer appendString:@"\tgsl_odeiv2_step *pStep = gsl_odeiv2_step_alloc(pT,NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_control *pControl = gsl_odeiv2_control_y_new(TOLERANCE,TOLERANCE);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_evolve *pEvolve = gsl_odeiv2_evolve_alloc(NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_odeiv2_system sys = {MassBalances,NULL,NUMBER_OF_STATES,&parameters_object};\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Open simulation output file  -- */\n"];
+    [buffer appendString:@"\tpSimulationOutputFile = fopen(pSimulationOutputFilePath, \"w\");\n"];
+    [buffer appendString:@"\tif (pSimulationOutputFile == NULL)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tprintf(\"ERROR: Failed to open simulation output file.\\n\");\n"];
+    [buffer appendString:@"\t\treturn(-1);\n"];
+    [buffer appendString:@"\t}\n"];
+    
+    NEW_LINE;
+    [buffer appendString:@"\t/* main simulation loop -- */\n"];
+    [buffer appendString:@"\tdblTime = dblTimeStart;\n"];
+    [buffer appendString:@"\twhile(dblTime<dblTimeStop)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tint status = gsl_odeiv2_evolve_apply(pEvolve,pControl,pStep,&sys,&dblTime,dblTimeStop,&dblTimeStep,pStateArray);\n"];
+    [buffer appendString:@"\t\tif (status != GSL_SUCCESS)\n"];
+    [buffer appendString:@"\t\t{\n"];
+    [buffer appendString:@"\t\t\tprintf(\"ODE Solver loop failed at t = %g\\n\", dblTime);\n"];
+    [buffer appendString:@"\t\t\treturn(-1);\n"];
+    [buffer appendString:@"\t\t}\n"];
+    [buffer appendString:@"\t\telse\n"];
+    [buffer appendString:@"\t\t{\n"];
+    [buffer appendString:@"\t\t\twriteSimulationOutputRecord(pSimulationOutputFile,dblTime,pStateArray);\n"];
+    [buffer appendString:@"\t\t}\n"];
+    [buffer appendString:@"\t}\n"];
     NEW_LINE;
     
     // Free gsl data
@@ -748,6 +778,8 @@
 	[buffer appendString:@"\tgsl_vector_free(parameters_object.pModelKineticsParameterVector);\n"];
 	[buffer appendString:@"\tgsl_matrix_free(parameters_object.pModelCirculationMatrix);\n"];
     [buffer appendString:@"\tgsl_matrix_free(parameters_object.pModelStoichiometricMatrix);\n"];
+    [buffer appendString:@"\tfree(pStateArray);\n"];
+    [buffer appendString:@"\tfclose(pSimulationOutputFile);\n"];
     NEW_LINE;
     
     [buffer appendString:@"\treturn 0;\n"];
@@ -755,7 +787,7 @@
     
     NEW_LINE;
     [buffer appendString:@"/* Helper functions -- */\n"];
-    [buffer appendString:@"static void readGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix)\n"];
+    [buffer appendString:@"static void populateGSLMatrixFromFile(const char* pFilename, gsl_matrix *pGSLMatrix)\n"];
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\tFILE *pFile = fopen(pFilename,\"r\");\n"];
     [buffer appendString:@"\tgsl_matrix_fscanf(pFile,pGSLMatrix);\n"];
@@ -763,7 +795,7 @@
     [buffer appendString:@"}\n"];
     NEW_LINE;
     
-    [buffer appendString:@"static void readGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector)\n"];
+    [buffer appendString:@"static void populateGSLVectorFromFile(const char* pFilename, gsl_vector *pGSLVector)\n"];
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\tFILE *pFile = fopen(pFilename,\"r\");\n"];
     [buffer appendString:@"\tgsl_vector_fscanf(pFile,pGSLVector);\n"];
@@ -771,8 +803,29 @@
     [buffer appendString:@"}\n"];
     NEW_LINE;
     
-    [buffer appendString:@"static void readDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray)\n"];
+    [buffer appendString:@"static void populateDoubleCArraryFromFile(const char* pFilename,double *pDoubleArray)\n"];
     [buffer appendString:@"{\n"];
+    [buffer appendString:@"\tgsl_vector *tmp = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tFILE *pFile = fopen(pFilename,\"r\");\n"];
+    [buffer appendString:@"\tgsl_vector_fscanf(pFile, tmp);\n"];
+    [buffer appendString:@"\tfclose(pFile);\n\n"];
+    [buffer appendString:@"\tfor (int state_index=0; state_index<NUMBER_OF_STATES; state_index++)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\t*(pDoubleArray + state_index) = gsl_vector_get(tmp,state_index);\n"];
+    [buffer appendString:@"\t}\n"];
+    [buffer appendString:@"\tgsl_vector_free(tmp);\n"];
+    [buffer appendString:@"}\n"];
+    NEW_LINE;
+    
+    [buffer appendString:@"static void writeSimulationOutputRecord(FILE *output_file,double time,double *pDoubleResultsArray)\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\tfprintf(output_file,\"%g \",time);\n"];
+    [buffer appendString:@"\tfor (int state_index=0; state_index<NUMBER_OF_STATES; state_index++)\n"];
+    [buffer appendString:@"\t{\n"];
+    [buffer appendString:@"\t\tdouble tmp_state_value = *(pDoubleResultsArray + state_index);\n"];
+    [buffer appendString:@"\t\tfprintf(output_file,\"%g \",tmp_state_value);\n"];
+    [buffer appendString:@"\t}\n"];
+    [buffer appendString:@"\tfprintf(output_file,\"\\n\");\n"];
     [buffer appendString:@"}\n"];
     
     // return -
