@@ -313,4 +313,13 @@
     }
 }
 
+#pragma mark - numerics methods
++(CGFloat)generateSampleFromNormalDistributionWithMean:(CGFloat)mean
+                                  andStandardDeviation:(CGFloat)standard_deviation
+{
+    float perturbation = ((float)arc4random())/((float)RAND_MAX);
+    CGFloat random_value = mean + perturbation*standard_deviation;
+    return random_value;
+}
+
 @end

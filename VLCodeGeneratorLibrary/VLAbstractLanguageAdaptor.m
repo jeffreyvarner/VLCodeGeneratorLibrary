@@ -63,6 +63,59 @@
 }
 
 #pragma mark - general methods
+-(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, get the trees -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    
+    // process each compartment -
+    for (NSXMLElement *compartment in compartment_vector)
+    {
+        // get the symbol -
+        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
+        
+        // process each species -
+        for (NSXMLElement *species in state_vector)
+        {
+            // the default is 0.0 -> however, if we have a specifc initial value for this compartment then use this value
+            NSString *xpath_string = [NSString stringWithFormat:@".//initial_amount[@compartment='%@']",compartment_symbol];
+            NSArray *initial_amount_array = [species nodesForXPath:xpath_string error:&xpath_error];
+            if (initial_amount_array == nil || [initial_amount_array count] == 0)
+            {
+                //NSString *species_symbol = [[species attributeForName:@"symbol"] stringValue];
+                [buffer appendString:@"0.0\n"];
+            }
+            else
+            {
+                // ok, we have a record.
+                NSString *average_value = [[[initial_amount_array lastObject] attributeForName:@"average_value"] stringValue];
+                NSString *std_value = [[[initial_amount_array lastObject] attributeForName:@"std_value"] stringValue];
+                
+                // calculate random value -
+                CGFloat float_average_value = [average_value floatValue];
+                CGFloat float_std_value = [std_value floatValue];
+                CGFloat float_ic_value = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:float_average_value
+                                                                                     andStandardDeviation:float_std_value];
+                
+                // add random value to buffer -
+                [buffer appendFormat:@"%f\n",float_ic_value];
+            }
+        }
+    }
+    
+    
+    
+    
+    return [NSString stringWithString:buffer];
+}
+
+
 -(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options
 {
     NSMutableString *buffer = [[NSMutableString alloc] init];

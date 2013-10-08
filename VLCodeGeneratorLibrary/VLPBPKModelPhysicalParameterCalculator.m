@@ -10,7 +10,7 @@
 
 #define TISSUE_DENSITY 1.04f
 #define AIR_DENSITY 0.001185
-#define LUNG_DENSITY 0.177
+#define LUNG_DENSITY 0.173
 
 @interface VLPBPKModelPhysicalParameterCalculator ()
 
@@ -177,8 +177,6 @@
         {
             volume = [self calculateLungVolumeFromModelTree:[self myModelTree]];
             self.lungVolume = volume;
-            
-            NSLog(@"lung = %f",[self lungVolume]);
         }
     }
 }

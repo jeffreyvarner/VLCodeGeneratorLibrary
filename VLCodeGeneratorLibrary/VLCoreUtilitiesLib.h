@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#include <stdlib.h>
 
 @interface VLCoreUtilitiesLib : NSObject
 {
@@ -26,5 +27,9 @@
 +(NSString *)lookupInputPathForTransformationWithName:(NSString *)transformName inTree:(NSXMLDocument *)blueprintTree;
 +(NSString *)lookupOutputPathForTransformationWithName:(NSString *)transformName inTree:(NSXMLDocument *)blueprintTree;
 +(NSString *)lookupOutputFileNameForTransformationWithName:(NSString *)transformName inTree:(NSXMLDocument *)blueprintTree;
+
+// numerics -
++(CGFloat)generateSampleFromNormalDistributionWithMean:(CGFloat)mean
+                                  andStandardDeviation:(CGFloat)standard_deviation;
 
 @end
