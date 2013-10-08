@@ -44,5 +44,7 @@
 -(NSUInteger)calculateNumberOfRatesInModelTree:(NSXMLDocument *)model_tree;
 -(NSUInteger)calculateNumberOfCompartmentsInModelTree:(NSXMLDocument *)model_tree;
 -(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree;
+-(NSUInteger)calculateNumberOfParametersInModelTree:(NSXMLDocument *)model_tree;
+
 
 @end

@@ -196,6 +196,9 @@
     // add to buffer -
     [buffer appendFormat:@"%f\n",float_sample_value];
     
+    // update parameter index -
+    (*parameter_index)++;
+    
     // return the buffer -
     return [NSString stringWithString:buffer];
 }
@@ -219,6 +222,9 @@
     
     // add to buffer -
     [buffer appendFormat:@"%f\n",float_sample_value];
+    
+    // update parameter index -
+    (*parameter_index)++;
     
     // return the buffer -
     return [NSString stringWithString:buffer];
@@ -247,7 +253,9 @@
         
         // add to buffer -
         [buffer appendFormat:@"%f\n",float_sample_value];
-
+        
+        // update parameter index -
+        (*parameter_index)++;
     }
     
     // return -
@@ -423,6 +431,107 @@
     }
     
     return number_of_rates;
+}
+
+-(NSUInteger)calculateNumberOfParametersInModelTree:(NSXMLDocument *)model_tree
+{
+    NSUInteger parameter_counter = 0;
+    NSUInteger rate_counter = 0;
+    NSError *xpath_error;
+    
+    // ok, so we need to load the operations, and generate the kinetics. The functional
+    // form of the rate laws depends upon the type attribute *and* the type attribute on the species
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *operations_array = [model_tree nodesForXPath:@".//operationsBlock/operation" error:&xpath_error];
+    for (NSXMLElement *operation in operations_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[operation attributeForName:@"compartment"] stringValue];
+        
+        if ([operation_compartment isEqualToString:@"all"] == YES)
+        {
+            // get the list of compartments, and build this rate law in each -
+            for (NSXMLElement *compartment in compartment_vector)
+            {
+                NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
+                
+                // ok, we have a specific compartment, build the rate law
+                __unused NSString *rate_law = [self formulateParametersForOperation:operation
+                                                             inCompartment:local_compartment
+                                                               atRateIndex:&rate_counter
+                                                         andParameterIndex:&parameter_counter];
+                
+            }
+        }
+        else
+        {
+            // ok, we have a specific compartment, build the rate law
+            __unused NSString *rate_law = [self formulateParametersForOperation:operation
+                                                         inCompartment:operation_compartment
+                                                           atRateIndex:&rate_counter
+                                                     andParameterIndex:&parameter_counter];
+            
+            
+            
+        }
+    }
+    
+    // ok, so let's process the basalGenerationBlock -
+    NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
+    for (NSXMLElement *basal_generation_term in basal_generation_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[basal_generation_term attributeForName:@"compartment"] stringValue];
+        
+        if ([operation_compartment isEqualToString:@"all"] == YES)
+        {
+            
+        }
+        else
+        {
+            __unused NSString *generation_rate_law = [self formulateBasalGenerationParametersForOperation:basal_generation_term
+                                                                                   inCompartment:operation_compartment
+                                                                                     atRateIndex:&rate_counter
+                                                                               andParameterIndex:&parameter_counter];
+            
+        }
+    }
+    
+    // ok, process the clearance block -
+    NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
+    for (NSXMLElement *basal_clearance_term in basal_clerance_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[basal_clearance_term attributeForName:@"compartment"] stringValue];
+        
+        if ([operation_compartment isEqualToString:@"all"] == YES)
+        {
+            
+        }
+        else
+        {
+            __unused NSString *clearance_rate_law = [self formulateBasalClearanceParametersForOperation:basal_clearance_term
+                                                                                 inCompartment:operation_compartment
+                                                                                   atRateIndex:&rate_counter
+                                                                             andParameterIndex:&parameter_counter];
+        }
+    }
+    
+    // Last, process the compartment volumes -
+    VLPBPKModelPhysicalParameterCalculator *volume_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
+    for (NSXMLElement *compartment in compartment_vector)
+    {
+        // ok, we have a specific compartment,
+        NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
+        
+        // calculate the volume -
+        __unused CGFloat volume = [volume_calculator getVolumeForCompartmentWithSymbol:local_compartment];
+        
+        // update parameter counter -
+        parameter_counter++;
+    }
+
+    return parameter_counter;
 }
 
 

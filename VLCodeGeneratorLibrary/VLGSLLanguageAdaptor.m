@@ -594,6 +594,7 @@
     // system dimension?
     NSUInteger NUMBER_OF_RATES = [self calculateNumberOfRatesInModelTree:model_tree];
     NSUInteger NUMBER_OF_STATES = [self calculateNumberOfStatesInModelTree:model_tree];
+    NSUInteger NUMBER_OF_PARAMETERS = [self calculateNumberOfParametersInModelTree:model_tree];
     
     // main -
     [buffer appendString:@"/* Load the GSL and other headers - */\n"];
@@ -614,7 +615,7 @@
     [buffer appendString:@"#define NUMBER_OF_ARGUEMENTS 9\n"];
     [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
     [buffer appendFormat:@"#define NUMBER_OF_STATES %lu\n",NUMBER_OF_STATES];
-    [buffer appendFormat:@"#define NUMBER_OF_PARAMETERS 100\n"];
+    [buffer appendFormat:@"#define NUMBER_OF_PARAMETERS %lu\n",NUMBER_OF_PARAMETERS];
     [buffer appendFormat:@"#define TOLERANCE 1e-6\n"];
     NEW_LINE;
     [buffer appendString:@"/* Function prototypes -- */\n"];
