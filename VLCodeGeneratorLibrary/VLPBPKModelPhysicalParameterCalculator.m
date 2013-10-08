@@ -9,6 +9,8 @@
 #import "VLPBPKModelPhysicalParameterCalculator.h"
 
 #define TISSUE_DENSITY 1.04f
+#define AIR_DENSITY 0.001185
+#define LUNG_DENSITY 0.177
 
 @interface VLPBPKModelPhysicalParameterCalculator ()
 
@@ -103,6 +105,22 @@
 }
 
 
+-(CGFloat)calculateLungVolumeFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat left_volume = 0.0f;
+    CGFloat right_volume = 0.0f;
+    CGFloat weight = [[self myBodyWeight] floatValue];
+    CGFloat height = [[self myBodyHeight] floatValue];
+    
+    // calculate the kidney volume -
+    left_volume = (1/LUNG_DENSITY)*(1.0f/1000.f)*(29.08*height + sqrtf(weight) + 11.06);
+    right_volume = (1/LUNG_DENSITY)*(1.0f/1000.0f)*(35.47*height + sqrtf(weight) + 5.53);
+    
+    // return -
+    return (left_volume + right_volume);
+}
+
+
 #pragma mark - private methods 
 -(void)setup
 {
@@ -154,6 +172,13 @@
         {
             volume = [self calculateBloodVolumeFromModelTree:[self myModelTree]];
             self.venousBloodVolume = 0.5*volume;
+        }
+        else if ([compartment_symbol isCaseInsensitiveLike:kLungSymbol] == YES)
+        {
+            volume = [self calculateLungVolumeFromModelTree:[self myModelTree]];
+            self.lungVolume = volume;
+            
+            NSLog(@"lung = %f",[self lungVolume]);
         }
     }
 }

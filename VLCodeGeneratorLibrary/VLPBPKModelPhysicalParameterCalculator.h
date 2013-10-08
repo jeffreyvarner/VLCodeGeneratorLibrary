@@ -23,6 +23,7 @@
     CGFloat _liverVolume;
     CGFloat _kidneyVolume;
     CGFloat _heartVolume;
+    CGFloat _lungVolume;
     CGFloat _venousBloodVolume;
     CGFloat _arterialBloodVolume;
 }
@@ -31,6 +32,7 @@
 @property (assign) CGFloat liverVolume;
 @property (assign) CGFloat kidneyVolume;
 @property (assign) CGFloat heartVolume;
+@property (assign) CGFloat lungVolume;
 @property (assign) CGFloat venousBloodVolume;
 @property (assign) CGFloat arterialBloodVolume;
 
