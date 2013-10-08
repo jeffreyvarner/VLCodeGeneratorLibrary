@@ -24,3 +24,6 @@ FOUNDATION_EXPORT NSString *const kXMLTransformationTree;
 FOUNDATION_EXPORT NSString *const kLiverSymbol;
 FOUNDATION_EXPORT NSString *const kKidneySymbol;
 FOUNDATION_EXPORT NSString *const kHeartSymbol;
+FOUNDATION_EXPORT NSString *const kLungSymbol;
+FOUNDATION_EXPORT NSString *const kVenousBloodPoolSymbol;
+FOUNDATION_EXPORT NSString *const kArterialBloodPoolSymbol;

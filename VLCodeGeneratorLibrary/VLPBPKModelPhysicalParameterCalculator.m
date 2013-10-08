@@ -80,9 +80,6 @@
     CGFloat volume = 0.0f;
     CGFloat weight = [[self myBodyWeight] floatValue];
     CGFloat height = [[self myBodyHeight] floatValue];
-    CGFloat height_in_cm = height*100;
-    
-    NSLog(@"w = %f h = %f",weight,height_in_cm);
     
     // calculate the kidney volume -
     volume = (1.0f/TISSUE_DENSITY)*(1.0f/1000.0f)*((22.81*height)*(powf(weight, 0.5)) - 4.15);
@@ -90,6 +87,21 @@
     // return -
     return volume;
 }
+
+-(CGFloat)calculateBloodVolumeFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat volume = 0.0f;
+    CGFloat weight = [[self myBodyWeight] floatValue];
+    CGFloat height = [[self myBodyHeight] floatValue];
+    CGFloat height_in_cm = height*100;
+    
+    // calculate the kidney volume -
+    volume = (1.0f/1000.0f)*(1.0f/0.5723)*(13.1*height_in_cm+18.05*weight - 480);
+    
+    // return -
+    return volume;
+}
+
 
 #pragma mark - private methods 
 -(void)setup
@@ -132,6 +144,16 @@
         {
             volume = [self calculateHeartVolumeFromModelTree:[self myModelTree]];
             self.heartVolume = volume;
+        }
+        else if ([compartment_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES)
+        {
+            volume = [self calculateBloodVolumeFromModelTree:[self myModelTree]];
+            self.arterialBloodVolume = 0.5f*volume;
+        }
+        else if ([compartment_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES)
+        {
+            volume = [self calculateBloodVolumeFromModelTree:[self myModelTree]];
+            self.venousBloodVolume = 0.5*volume;
         }
     }
 }

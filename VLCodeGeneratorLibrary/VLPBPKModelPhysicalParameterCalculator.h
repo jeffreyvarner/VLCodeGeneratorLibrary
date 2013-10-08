@@ -23,13 +23,16 @@
     CGFloat _liverVolume;
     CGFloat _kidneyVolume;
     CGFloat _heartVolume;
-    
+    CGFloat _venousBloodVolume;
+    CGFloat _arterialBloodVolume;
 }
 
 // public properties -
 @property (assign) CGFloat liverVolume;
 @property (assign) CGFloat kidneyVolume;
 @property (assign) CGFloat heartVolume;
+@property (assign) CGFloat venousBloodVolume;
+@property (assign) CGFloat arterialBloodVolume;
 
 // custom init -
 +(VLPBPKModelPhysicalParameterCalculator *)buildCalculatorForModelTree:(NSXMLDocument *)modelTree;

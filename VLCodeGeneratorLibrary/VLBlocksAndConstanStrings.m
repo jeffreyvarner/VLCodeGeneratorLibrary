@@ -19,3 +19,5 @@ NSString *const kXMLTransformationTree = @"kXMLTransformationTree";
 NSString *const kLiverSymbol = @"liver";
 NSString *const kKidneySymbol = @"kidney";
 NSString *const kHeartSymbol = @"heart";
+NSString *const kVenousBloodPoolSymbol = @"venous_blood_pool";
+NSString *const kArterialBloodPoolSymbol = @"arterial_blood_pool";
