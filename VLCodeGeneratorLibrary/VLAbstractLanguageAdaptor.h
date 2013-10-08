@@ -37,6 +37,7 @@
 -(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelParametersBufferWithOptions:(NSDictionary *)options;
 
 // general methods
 -(NSUInteger)calculateNumberOfStatesInModelTree:(NSXMLDocument *)model_tree;

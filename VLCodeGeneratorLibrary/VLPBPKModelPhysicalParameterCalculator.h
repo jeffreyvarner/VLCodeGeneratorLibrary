@@ -39,4 +39,7 @@
 // custom init -
 +(VLPBPKModelPhysicalParameterCalculator *)buildCalculatorForModelTree:(NSXMLDocument *)modelTree;
 
+// get method -
+-(CGFloat)getVolumeForCompartmentWithSymbol:(NSString *)symbol;
+
 @end
