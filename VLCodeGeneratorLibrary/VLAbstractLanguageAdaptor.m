@@ -68,7 +68,6 @@
     // counters -
     NSUInteger rate_counter = 0;
     NSUInteger parameter_counter = 0;
-    NSUInteger state_counter = 0;
 
     // buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
@@ -341,12 +340,175 @@
     
     // ok, get the trees -
     NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
-    NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
+    __unused NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
     
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *operations_array = [model_tree nodesForXPath:@".//operationsBlock/operation" error:&xpath_error];
+    NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
+    NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
     
+    for (NSXMLElement *compartment_node in compartment_vector)
+    {
+        // Get the compartment symbol -
+        NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
+        
+        // go through the species -
+        for (NSXMLElement *state_node in state_vector)
+        {
+            // Species -
+            NSString *species_symbol = [[state_node attributeForName:@"symbol"] stringValue];
+            
+            // Strings for operations -
+            NSString *operations_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                          andSpecies:species_symbol
+                                                                                  forOperationsArray:operations_array];
+            
+            NSString *basal_generation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                                andSpecies:species_symbol
+                                                                                   forBasalGenerationArray:basal_generation_array];
+            
+            NSString *basal_degradation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                                 andSpecies:species_symbol
+                                                                                   forBasalDegradationArray:basal_clerance_array];
+            
+            // add these fragments to the buffer -
+            [buffer appendString:operations_columns_buffer];
+            [buffer appendString:basal_generation_columns_buffer];
+            [buffer appendString:basal_degradation_columns_buffer];
+            [buffer appendString:@"\n"];
+        }
+    }
     
     return [NSString stringWithString:buffer];
 }
+
+-(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
+                                               andSpecies:(NSString *)speciesSymbol
+                                       forOperationsArray:(NSArray *)array
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    NSError *xpath_error;
+    
+    // process my operation terms -
+    for (NSXMLElement *operation_term in array)
+    {
+        // get the local compartment -
+        NSString *local_compartment_symbol = [[operation_term attributeForName:@"compartment"] stringValue];
+        if (([local_compartment_symbol isEqualToString:compartmentSymbol] == YES || [local_compartment_symbol isEqualToString:@"all"] == YES))
+        {
+            // ok, we are in the correct compartment -
+            // Do we have the species as a reactant?
+            NSArray *my_local_input_species = [operation_term nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
+            NSArray *my_local_output_species = [operation_term nodesForXPath:@".//listOfOutputs/species_reference" error:&xpath_error];
+            
+            // do we have a match on the inputs -
+            for (NSXMLElement *local_species_input_node in my_local_input_species)
+            {
+                // Get the local species and type flag -
+                NSString *local_species_symbol = [[local_species_input_node attributeForName:@"symbol"] stringValue];
+                NSString *local_type_symbol = [[local_species_input_node attributeForName:@"type"] stringValue];
+                
+                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    // ok, we have a match on a dynamic species -
+                    [buffer appendString:@"-1.0 "];
+                }
+                else if ([local_type_symbol isEqualToString:@"enzyme"] == YES &&
+                         [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    [buffer appendString:@"0.0 "];
+                }
+            }
+            
+            // do we have a match on outputs?
+            for (NSXMLElement *local_species_output_node in my_local_output_species)
+            {
+                // Get the local species and type flag -
+                NSString *local_species_symbol = [[local_species_output_node attributeForName:@"symbol"] stringValue];
+                NSString *local_type_symbol = [[local_species_output_node attributeForName:@"type"] stringValue];
+                
+                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    // ok, we have a match on a dynamic species -
+                    [buffer appendString:@"1.0 "];
+                }
+            }
+        }
+        else
+        {
+            // we are *note* in the correct compartment, so the answer is 0.0
+            [buffer appendString:@"0.0 "];
+        }
+    }
+    
+    // return -
+    return buffer;
+}
+
+
+-(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
+                                               andSpecies:(NSString *)speciesSymbol
+                                  forBasalGenerationArray:(NSArray *)array
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // process the generation terms -
+    for (NSXMLElement *basal_generation_term in array)
+    {
+        // which compartment and symbol do we have?
+        NSString *local_compartment_symbol = [[basal_generation_term attributeForName:@"compartment"] stringValue];
+        NSString *local_species_symbol = [[basal_generation_term attributeForName:@"symbol"] stringValue];
+        
+        // ok, so do we have a match?
+        if (([local_compartment_symbol isEqualToString:compartmentSymbol] == YES || [local_compartment_symbol isEqualToString:@"all"] == YES)  &&
+            [local_species_symbol isEqualToString:speciesSymbol] == YES)
+        {
+            [buffer appendString:@"1.0 "];
+        }
+        else
+        {
+            [buffer appendString:@"0.0 "];
+        }
+    }
+    
+    // return -
+    return buffer;
+}
+
+
+-(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
+                                               andSpecies:(NSString *)speciesSymbol
+                                 forBasalDegradationArray:(NSArray *)array
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // process the generation terms -
+    for (NSXMLElement *basal_generation_term in array)
+    {
+        // which compartment and symbol do we have?
+        NSString *local_compartment_symbol = [[basal_generation_term attributeForName:@"compartment"] stringValue];
+        NSString *local_species_symbol = [[basal_generation_term attributeForName:@"symbol"] stringValue];
+        
+        // ok, so do we have a match?
+        if (([local_compartment_symbol isEqualToString:compartmentSymbol] == YES || [local_compartment_symbol isEqualToString:@"all"] == YES) &&
+            [local_species_symbol isEqualToString:speciesSymbol] == YES)
+        {
+            [buffer appendString:@"-1.0 "];
+        }
+        else
+        {
+            [buffer appendString:@"0.0 "];
+        }
+    }
+    
+    // return -
+    return buffer;
+}
+
 
 -(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree
 {
