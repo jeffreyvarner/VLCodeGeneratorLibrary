@@ -319,17 +319,20 @@
     // ok, get the trees -
     NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
     
-    // how many species do we have?
-    NSUInteger NUMBER_OF_SPECIES = [self calculateNumberOfSpeciesInModelTree:model_tree];
-    NSUInteger NUMBER_OF_COMPARTMENTS = [self calculateNumberOfCompartmentsInModelTree:model_tree];
-    
     // build calculator -
     VLPBPKModelPhysicalParameterCalculator *transport_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
     
-    // get volume of heart, kidney and liver -
-    CGFloat heart_volume = [transport_calculator heartVolume];
+    // need to get the list of circulation_edges -
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSUInteger NUMBER_OF_SPECIES = [state_vector count];
     
-    NSLog(@"heart_volume = %f",heart_volume);
+    NSArray *edge_array = [model_tree nodesForXPath:@".//listOfCirculationEdges/edge" error:&xpath_error];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    
+    for (NSXMLElement *row_compartment_node in compartment_vector)
+    {
+    }
     
     return [NSString stringWithString:buffer];
 }

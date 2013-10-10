@@ -26,6 +26,7 @@
     CGFloat _lungVolume;
     CGFloat _venousBloodVolume;
     CGFloat _arterialBloodVolume;
+    CGFloat _lungBloodFlowRate;
 }
 
 // public properties -
@@ -41,5 +42,6 @@
 
 // get method -
 -(CGFloat)getVolumeForCompartmentWithSymbol:(NSString *)symbol;
+-(CGFloat)getVolumetricBloodFlowRateWithCompartmentSymbol:(NSString *)symbol;
 
 @end

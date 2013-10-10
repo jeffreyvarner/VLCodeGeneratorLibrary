@@ -85,7 +85,130 @@
     return volume;
 }
 
+-(CGFloat)getVolumetricBloodFlowRateWithCompartmentSymbol:(NSString *)compartment_symbol
+{
+    CGFloat flow_rate = 0.0;
+    
+    // process each compartment -
+    if ([compartment_symbol isCaseInsensitiveLike:kLiverSymbol] == YES)
+    {
+        flow_rate = [self calculateLiverBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([compartment_symbol isCaseInsensitiveLike:kKidneySymbol] == YES)
+    {
+        flow_rate = [self calculateKidneyBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([compartment_symbol isCaseInsensitiveLike:kHeartSymbol] == YES)
+    {
+        flow_rate = [self calculateHeartBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([compartment_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES)
+    {
+        flow_rate = 0.5f*[self calculateArterialBloodPoolBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([compartment_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES)
+    {
+        flow_rate = 0.5f*[self calculateVenousBloodPoolBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([compartment_symbol isCaseInsensitiveLike:kLungSymbol] == YES)
+    {
+        flow_rate = [self calculateLungBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+
+    return flow_rate;
+}
+
 #pragma mark - private methods to calculate the correlations
+-(CGFloat)calculateLiverBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    // hard code for now -
+    CGFloat literature_mean_value = 1.32f;
+    CGFloat literature_std_value = 0.22f;
+    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                            andStandardDeviation:literature_std_value];
+    
+    return flow_rate;
+}
+
+-(CGFloat)calculateLungBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    // hard code for now -
+    CGFloat literature_mean_value = 8.00f;
+    CGFloat literature_std_value = 1.35f;
+    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                            andStandardDeviation:literature_std_value];
+    
+    // cache this -
+    _lungBloodFlowRate = flow_rate;
+    
+    return flow_rate;
+}
+
+-(CGFloat)calculateKidneyBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    // hard code for now -
+    CGFloat literature_mean_value = 1.17f;
+    CGFloat literature_std_value = 0.25f;
+    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                            andStandardDeviation:literature_std_value];
+
+    
+    return flow_rate;
+}
+
+-(CGFloat)calculateHeartBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    // hard code for now -
+    CGFloat literature_mean_value = 0.73f;
+    CGFloat literature_std_value = 0.25f;
+    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                            andStandardDeviation:literature_std_value];
+    
+    return flow_rate;
+}
+
+-(CGFloat)calculateVenousBloodPoolBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    if (_lungBloodFlowRate == -1.0f)
+    {
+        flow_rate = [self calculateLungBloodFlowRateFromModelTree:modelTree];
+    }
+    else
+    {
+        // this should be the lung rate -
+        flow_rate = _lungBloodFlowRate;
+    }
+    
+    return flow_rate;
+}
+
+-(CGFloat)calculateArterialBloodPoolBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
+{
+    CGFloat flow_rate = 0.0;
+    
+    if (_lungBloodFlowRate == -1.0f)
+    {
+        flow_rate = [self calculateLungBloodFlowRateFromModelTree:modelTree];
+    }
+    else
+    {
+        // this should be the lung rate -
+        flow_rate = _lungBloodFlowRate;
+    }
+    
+    return flow_rate;
+}
+
 -(CGFloat)calculateLiverVolumeFromModelTree:(NSXMLDocument *)modelTree
 {
     CGFloat volume = 0.0f;
@@ -219,6 +342,9 @@
             self.lungVolume = volume;
         }
     }
+    
+    // set the _lungBloodFlowRate
+    _lungBloodFlowRate = -1.0f;
 }
 
 -(void)cleanMyMemory
