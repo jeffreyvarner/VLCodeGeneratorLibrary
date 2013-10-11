@@ -118,6 +118,40 @@
     return flow_rate;
 }
 
+-(CGFloat)calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:(NSString *)start_symbol
+                                                    andEndCompartmentWithSymbol:(NSString *)end_symbol
+{
+    CGFloat flow_rate = 0.0;
+    
+    if ([start_symbol isCaseInsensitiveLike:kLungSymbol] == YES &&
+        [end_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES)
+    {
+        flow_rate = [self calculateLungBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kHeartSymbol] == YES)
+    {
+        flow_rate = [self calculateHeartBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kLiverSymbol] == YES)
+    {
+        flow_rate = [self calculateLiverBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kArterialBloodPoolSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kKidneySymbol] == YES)
+    {
+        flow_rate = [self calculateKidneyBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kLungSymbol] == YES)
+    {
+        flow_rate = [self calculateLungBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+
+    return flow_rate;
+}
+
 #pragma mark - private methods to calculate the correlations
 -(CGFloat)calculateLiverBloodFlowRateFromModelTree:(NSXMLDocument *)modelTree
 {
@@ -139,11 +173,19 @@
     // hard code for now -
     CGFloat literature_mean_value = 8.00f;
     CGFloat literature_std_value = 1.35f;
-    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
-                                                            andStandardDeviation:literature_std_value];
     
-    // cache this -
-    _lungBloodFlowRate = flow_rate;
+    if (_lungBloodFlowRate == -1)
+    {
+        flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                                andStandardDeviation:literature_std_value];
+        
+        // cache this -
+        _lungBloodFlowRate = flow_rate;
+    }
+    else
+    {
+        flow_rate = _lungBloodFlowRate;
+    }
     
     return flow_rate;
 }

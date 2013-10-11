@@ -7,6 +7,8 @@
 //
 
 #import <XCTest/XCTest.h>
+#import "VLCoreUtilitiesLib.h"
+#import "VLAbstractLanguageAdaptor.h"
 
 @interface VLCodeGeneratorLibraryTests : XCTestCase
 
@@ -26,9 +28,25 @@
     [super tearDown];
 }
 
-- (void)testExample
+-(void)testGenerateCirculationMatrixMethod
 {
-    XCTFail(@"No implementation for \"%s\"", __PRETTY_FUNCTION__);
+    // load the files -
+    NSString *transformation_file_path = @"/Users/jeffreyvarner/Desktop/MyUniversalProjects/PBPKModelGenerator/conf/Transformation.xml";
+    NSString *model_file_path = @"/Users/jeffreyvarner/Desktop/MyUniversalProjects/PBPKModelGenerator/conf/Model.xml";
+    
+    NSURL *transformation_url = [NSURL fileURLWithPath:transformation_file_path];
+    NSURL *model_url = [NSURL fileURLWithPath:model_file_path];
+    
+    NSXMLDocument *transformation_tree = [VLCoreUtilitiesLib createXMLDocumentFromFile:transformation_url];
+    NSXMLDocument *model_tree = [VLCoreUtilitiesLib createXMLDocumentFromFile:model_url];
+    NSDictionary *options = @
+    {
+        kXMLTransformationTree: transformation_tree,
+        kXMLModelTree: model_tree
+    };
+    
+    VLAbstractLanguageAdaptor *adapter = [[VLAbstractLanguageAdaptor alloc] init];
+    [adapter generateModelCirculationMatrixBufferWithOptions:options];
 }
 
 @end

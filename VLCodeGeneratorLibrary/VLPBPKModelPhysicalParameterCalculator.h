@@ -43,5 +43,6 @@
 // get method -
 -(CGFloat)getVolumeForCompartmentWithSymbol:(NSString *)symbol;
 -(CGFloat)getVolumetricBloodFlowRateWithCompartmentSymbol:(NSString *)symbol;
+-(CGFloat)calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:(NSString *)start_symbol andEndCompartmentWithSymbol:(NSString *)end_symbol;
 
 @end

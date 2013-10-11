@@ -322,6 +322,10 @@
     // build calculator -
     VLPBPKModelPhysicalParameterCalculator *transport_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
     
+    // Build adj list with the edges -
+    NSDictionary *outbound_adj_dictionary = [self buildOutboundCirculationAdjacencyListForModelTree:model_tree];
+    NSDictionary *inbound_adj_dictionary = [self buildInboundCirculationAdjacencyListForModelTree:model_tree];
+    
     // need to get the list of circulation_edges -
     NSError *xpath_error;
     NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
@@ -332,10 +336,189 @@
     
     for (NSXMLElement *row_compartment_node in compartment_vector)
     {
+        // what compartment are we looking at?
+        NSString *local_compartment_symbol = [[row_compartment_node attributeForName:@"symbol"] stringValue];
+        
+        // process each species -
+        for (NSUInteger outer_species_index = 0;outer_species_index<NUMBER_OF_SPECIES;outer_species_index++)
+        {
+            NSString *row_buffer = [self formulateCirculationMatrixRowForCompartmentSymbol:local_compartment_symbol
+                                                                      withComparmentVector:compartment_vector
+                                                                          withSpeciesIndex:outer_species_index
+                                                                           withStateVector:state_vector
+                                                                         withOutboundEdges:outbound_adj_dictionary
+                                                                         withInboundEdges:inbound_adj_dictionary
+                                                                   withTransportCalculator:transport_calculator];
+            
+            // add a newline and process the next species -
+            [buffer appendString:row_buffer];
+            [buffer appendString:@"\n"];
+        }
     }
     
     return [NSString stringWithString:buffer];
 }
+
+-(NSString *)formulateCirculationMatrixRowForCompartmentSymbol:(NSString *)compartment_symbol
+                                          withComparmentVector:(NSArray *)compartment_array
+                                              withSpeciesIndex:(NSUInteger)species_index
+                                               withStateVector:(NSArray *)species_array
+                                             withOutboundEdges:(NSDictionary *)outbound_adj_dictionary
+                                             withInboundEdges:(NSDictionary *)inbound_adj_dictionary
+                                       withTransportCalculator:(VLPBPKModelPhysicalParameterCalculator *)transport_calculator
+
+
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    NSUInteger NUMBER_OF_SPECIES = [species_array count];
+    
+    for (NSXMLElement *local_compartment_node in compartment_array)
+    {
+        // what col are we?
+        NSString *local_compartment_symbol = [[local_compartment_node attributeForName:@"symbol"] stringValue];
+        
+        if ([local_compartment_symbol isEqualToString:compartment_symbol] == YES)
+        {
+            // ok, if we are here, then we are on the diagnol -
+            
+            // we need to calculate the out terms -
+            
+            // Look up out set for local symbol -
+            NSMutableOrderedSet *outbound_set = [outbound_adj_dictionary objectForKey:local_compartment_symbol];
+            NSUInteger NUMBER_OF_OUTLETS = [outbound_set count];
+            CGFloat flow_rate = 0.0f;
+            for (NSUInteger outlet_index = 0; outlet_index<NUMBER_OF_OUTLETS;outlet_index++)
+            {
+                // target -
+                NSString *target_symbol = [outbound_set objectAtIndex:outlet_index];
+                
+                // Calculate flow -
+                flow_rate = flow_rate + [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
+                                                                                                    andEndCompartmentWithSymbol:target_symbol];
+            }
+            
+            for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+            {
+                if (local_state_index == species_index)
+                {
+                    [buffer appendFormat:@"-1.0*%f ",flow_rate];
+                }
+                else
+                {
+                    [buffer appendString:@"0.0 "];
+                }
+            }
+        }
+        else
+        {
+            // ok, we are *off* diagonal - so that means no connection -or- an inflow
+            // to figure out which case, we need to look up to see if we have a record
+            // in the in adj dictionary -
+            NSMutableOrderedSet *inbound_set = [inbound_adj_dictionary objectForKey:compartment_symbol];
+            if ([inbound_set containsObject:local_compartment_symbol] == YES)
+            {
+                // connection -
+                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+                {
+                    if (local_state_index == species_index)
+                    {
+                        [buffer appendString:@"CCC "];
+                    }
+                    else
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                }
+            }
+            else
+            {
+                // no connection ...
+                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+                {
+                    if (local_state_index == species_index)
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                    else
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                }
+            }
+        }
+    }
+    
+    return buffer;
+}
+
+-(NSDictionary *)buildOutboundCirculationAdjacencyListForModelTree:(NSXMLDocument *)model_tree
+{
+    NSMutableDictionary *adjacency_dictionary = [NSMutableDictionary dictionary];
+    
+    // Get the list of compartments -
+    NSError *xpath_error;
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *edge_array = [model_tree nodesForXPath:@".//listOfCirculationEdges/edge" error:&xpath_error];
+    for (NSXMLElement *compartment_node in compartment_vector)
+    {
+        // What compartment are we looking at?
+        NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
+        
+        NSMutableOrderedSet *tmp_set = [NSMutableOrderedSet orderedSet];
+        for (NSXMLElement *edge_node in edge_array)
+        {
+            // Get the outbound symbol -
+            NSString *outbound_compartment_symbol = [[edge_node attributeForName:@"start_symbol"] stringValue];
+            if ([outbound_compartment_symbol isEqualToString:compartment_symbol] == YES)
+            {
+                NSString *target_symbol = [[edge_node attributeForName:@"end_symbol"] stringValue];
+                
+                // grab this edge node -
+                [tmp_set addObject:target_symbol];
+            }
+        }
+        
+        // add the array to the dictionary -
+        [adjacency_dictionary setObject:tmp_set forKey:compartment_symbol];
+    }
+    
+    return [NSDictionary dictionaryWithDictionary:adjacency_dictionary];
+}
+
+-(NSDictionary *)buildInboundCirculationAdjacencyListForModelTree:(NSXMLDocument *)model_tree
+{
+    NSMutableDictionary *adjacency_dictionary = [NSMutableDictionary dictionary];
+    
+    // Get the list of compartments -
+    NSError *xpath_error;
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *edge_array = [model_tree nodesForXPath:@".//listOfCirculationEdges/edge" error:&xpath_error];
+    for (NSXMLElement *compartment_node in compartment_vector)
+    {
+        // What compartment are we looking at?
+        NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
+        
+        NSMutableOrderedSet *tmp_set = [NSMutableOrderedSet orderedSet];
+        for (NSXMLElement *edge_node in edge_array)
+        {
+            // Get the outbound symbol -
+            NSString *outbound_compartment_symbol = [[edge_node attributeForName:@"end_symbol"] stringValue];
+            if ([outbound_compartment_symbol isEqualToString:compartment_symbol] == YES)
+            {
+                NSString *target_symbol = [[edge_node attributeForName:@"start_symbol"] stringValue];
+                
+                // grab this edge node -
+                [tmp_set addObject:target_symbol];
+            }
+        }
+        
+        // add the array to the dictionary -
+        [adjacency_dictionary setObject:tmp_set forKey:compartment_symbol];
+    }
+    
+    return [NSDictionary dictionaryWithDictionary:adjacency_dictionary];
+}
+
 
 -(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options
 {
