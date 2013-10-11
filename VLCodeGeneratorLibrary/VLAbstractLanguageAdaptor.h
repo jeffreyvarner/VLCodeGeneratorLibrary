@@ -23,6 +23,10 @@
 -(NSString *)generateModelOperationKineticsBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelOperationKineticsHeaderBufferWithOptions:(NSDictionary *)options;
 
+// forcing -
+-(NSString *)generateModelForcingHeaderBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelForcingBufferWithOptions:(NSDictionary *)options;
+
 // massbalances -
 -(NSString *)generateModelMassBalancesImplBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelMassBalancesHeaderBufferWithOptions:(NSDictionary *)options;
@@ -38,6 +42,7 @@
 -(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelParametersBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelCompartmentVolumeBufferWithOptions:(NSDictionary *)options;
 
 // general methods
 -(NSUInteger)calculateNumberOfStatesInModelTree:(NSXMLDocument *)model_tree;

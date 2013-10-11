@@ -12,6 +12,54 @@
 
 @implementation VLGSLLanguageAdaptor
 
+#pragma mark - forcing functions
+-(NSString *)generateModelForcingHeaderBufferWithOptions:(NSDictionary *)options
+{
+    // initialize the buffer -
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // headers -
+    [buffer appendString:@"/* Load the GSL and other headers - */\n"];
+    [buffer appendString:@"#include <stdio.h>\n"];
+    [buffer appendString:@"#include <math.h>\n"];
+    [buffer appendString:@"#include <time.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_errno.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_matrix.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_odeiv.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_vector.h>\n"];
+    [buffer appendString:@"#include <gsl/gsl_blas.h>\n\n"];
+    [buffer appendString:@"\n"];
+    [buffer appendString:@"/* public methods */\n"];
+    [buffer appendString:@"void Forcing(double t,double const state_vector[], gsl_vector *pForcingVector, void* parameter_object);\n\n"];
+    [buffer appendString:@"\n"];
+    
+    // return -
+    return [NSString stringWithString:buffer];
+}
+
+-(NSString *)generateModelForcingBufferWithOptions:(NSDictionary *)options
+{
+    // initialize the buffer -
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // get trees from the options -
+    __unused NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    __unused NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
+    
+    // headers -
+    [buffer appendString:@"#include \"Forcing.h\"\n"];
+    [buffer appendString:@"\n"];
+    [buffer appendString:@"void Forcing(double t,double const state_vector[], gsl_vector *pForcingVector, void* parameter_object)\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\t/* Implement your specific input logic here -- */\n"];
+    [buffer appendString:@"\tgsl_vector_set_zero(pForcingVector);\n"];
+    [buffer appendString:@"}\n"];
+    
+    // return -
+    return [NSString stringWithString:buffer];
+}
+
+
 #pragma mark - kinetics methods
 -(NSString *)generateModelOperationKineticsBufferWithOptions:(NSDictionary *)options
 {
@@ -38,11 +86,13 @@
     [buffer appendString:@"\t/* Get the parameters - */\n"];
     [buffer appendString:@"\tstruct VLParameters *parameter_struct = (struct VLParameters *)parameter_object;\n"];
     [buffer appendString:@"\tgsl_vector *pV = parameter_struct->pModelKineticsParameterVector;\n"];
+    [buffer appendString:@"\tgsl_vector *pVolume = parameter_struct->pModelVolumeVector;\n"];
     [buffer appendString:@"\n"];
     [buffer appendString:@"\t/* Alias elements of the state vector - */\n"];
     NSError *xpath_error;
     NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
     NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSUInteger local_compartment_index = 0;
     for (NSXMLElement *compartment in compartment_vector)
     {
         // get compartment -
@@ -54,6 +104,9 @@
             NSString *final_symbol = [NSString stringWithFormat:@"%@_%@",state_symbol,compartment_symbol];
             [buffer appendFormat:@"\tdouble %@ = state_vector[%lu];\n",final_symbol,state_counter++];
         }
+        
+        // add a volume term -
+        [buffer appendFormat:@"\tdouble VOLUME_%@ = gsl_vector_get(pVolume,%lu);\n",compartment_symbol,local_compartment_index++];
     }
     
     [buffer appendString:@"\n"];
@@ -162,7 +215,7 @@
     [buffer appendFormat:@"\t/* index: %lu */\n",*rate_index];
     [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
     [buffer appendFormat:@"\tdouble kCLEARANCE_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
-    [buffer appendFormat:@"\tdbl_tmp = (kCLEARANCE_%@)*%@;\n",species_symbol,species_symbol];
+    [buffer appendFormat:@"\tdbl_tmp = (kCLEARANCE_%@)*%@*VOLUME_%@;\n",species_symbol,species_symbol,compartment];
     [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
     [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
     [buffer appendString:@"\n"];
@@ -186,8 +239,9 @@
     [buffer appendFormat:@"\t/* index: %lu */\n",*rate_index];
     [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
     [buffer appendFormat:@"\tdouble GENERATION_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
+    [buffer appendFormat:@"\tdbl_tmp = (GENERATION_%@_%@)*VOLUME_%@;\n",species,compartment,compartment];
     [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
-    [buffer appendFormat:@"%lu,GENERATION_%@_%@);\n",(*rate_index)++,species,compartment];
+    [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
     [buffer appendString:@"\n"];
 
     
@@ -236,7 +290,7 @@
         }
         
         // build the rate law -
-        [buffer appendFormat:@"\tdbl_tmp = kCAT_%@_%@*%@",operation_name,compartment,enzyme_symbol];
+        [buffer appendFormat:@"\tdbl_tmp = VOLUME_%@*(kCAT_%@_%@*%@",compartment,operation_name,compartment,enzyme_symbol];
         if ([reactants_array count]>0)
         {
             [buffer appendString:@"*"];
@@ -269,7 +323,7 @@
                 }
                 else
                 {
-                    [buffer appendString:@";"];
+                    [buffer appendString:@");"];
                 }
                 
                 reactant_counter++;
@@ -308,6 +362,7 @@
     [buffer appendString:@"struct VLParameters\n"];
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\tgsl_vector *pModelKineticsParameterVector;\n"];
+    [buffer appendString:@"\tgsl_vector *pModelVolumeVector;\n"];
     [buffer appendString:@"\tgsl_matrix *pModelCirculationMatrix;\n"];
     [buffer appendString:@"\tgsl_matrix *pModelStoichiometricMatrix;\n"];
     [buffer appendString:@"};\n\n"];
@@ -349,10 +404,14 @@
     [buffer appendString:@"\tstruct VLParameters *parameter_struct = (struct VLParameters *)parameter_object;\n"];
     [buffer appendString:@"\tgsl_vector *pRateVector = gsl_vector_alloc(NUMBER_OF_RATES);\n"];
     [buffer appendString:@"\tgsl_vector *pStateVector = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
+    [buffer appendString:@"\tgsl_vector *pForcingVector = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
     [buffer appendString:@"\tgsl_vector *pRightHandSideVector = gsl_vector_alloc(NUMBER_OF_STATES);\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Evaluate the kinetics -- */\n"];
     [buffer appendString:@"\tKinetics(t,x,pRateVector,parameter_object);\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t/* Evaluate the forcing -- */\n"];
+    [buffer appendString:@"\tForcing(t,x,pForcingVector,parameter_object);\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Setup mass balance calculations -- */\n"];
     [buffer appendString:@"\tgsl_matrix *pStoichiometricMatrix = parameter_struct->pModelStoichiometricMatrix;\n"];
@@ -361,12 +420,13 @@
     [buffer appendString:@"\t/* Populate the state_vector -- */\n"];
     [buffer appendString:@"\tfor(int state_index = 0; state_index < NUMBER_OF_STATES; state_index++)\n"];
     [buffer appendString:@"\t{\n"];
-    [buffer appendString:@"\t\tgsl_vector_set(pRightHandSideVector,state_index,x[state_index]);\n"];
+    [buffer appendString:@"\t\tgsl_vector_set(pStateVector,state_index,x[state_index]);\n"];
     [buffer appendString:@"\t}\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Calculate the right hand side -- */\n"];
     [buffer appendString:@"\tgsl_blas_dgemv(CblasNoTrans,1.0,pStoichiometricMatrix,pRateVector,0.0,pRightHandSideVector);\n"];
     [buffer appendString:@"\tgsl_blas_dgemv(CblasNoTrans,1.0,pCirculationMatrix,pStateVector,1.0,pRightHandSideVector);\n"];
+    [buffer appendString:@"\tgsl_blas_daxpy(1.0,pForcingVector,pRightHandSideVector);\n"];
     NEW_LINE;
     
     [buffer appendString:@"\t/* Populate the f[] term -- */\n"];
@@ -379,6 +439,7 @@
     [buffer appendString:@"\t/* clean up -- */\n"];
     [buffer appendString:@"\tgsl_vector_free(pRateVector);\n"];
     [buffer appendString:@"\tgsl_vector_free(pStateVector);\n"];
+    [buffer appendString:@"\tgsl_vector_free(pForcingVector);\n"];
     [buffer appendString:@"\tgsl_vector_free(pRightHandSideVector);\n"];
     [buffer appendString:@"\treturn(GSL_SUCCESS);\n"];
     [buffer appendString:@"}\n"];
@@ -571,6 +632,7 @@
     NEW_LINE;
     [buffer appendString:@"/* Load the model specific headers - */\n"];
     [buffer appendString:@"#include \"Kinetics.h\"\n"];
+    [buffer appendString:@"#include \"Forcing.h\"\n"];
     NEW_LINE;
     [buffer appendString:@"/* public methods */\n"];
     [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object);\n"];
@@ -595,6 +657,7 @@
     NSUInteger NUMBER_OF_RATES = [self calculateNumberOfRatesInModelTree:model_tree];
     NSUInteger NUMBER_OF_STATES = [self calculateNumberOfStatesInModelTree:model_tree];
     NSUInteger NUMBER_OF_PARAMETERS = [self calculateNumberOfParametersInModelTree:model_tree];
+    NSUInteger NUMBER_OF_COMPARTMENTS = [self calculateNumberOfCompartmentsInModelTree:model_tree];
     
     // main -
     [buffer appendString:@"/* Load the GSL and other headers - */\n"];
@@ -612,10 +675,11 @@
     [buffer appendString:@"#include \"MassBalances.h\"\n"];
     NEW_LINE;
     [buffer appendString:@"/* Problem specific define statements -- */\n"];
-    [buffer appendString:@"#define NUMBER_OF_ARGUEMENTS 9\n"];
+    [buffer appendString:@"#define NUMBER_OF_ARGUEMENTS 10\n"];
     [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
     [buffer appendFormat:@"#define NUMBER_OF_STATES %lu\n",NUMBER_OF_STATES];
     [buffer appendFormat:@"#define NUMBER_OF_PARAMETERS %lu\n",NUMBER_OF_PARAMETERS];
+    [buffer appendFormat:@"#define NUMBER_OF_COMPARTMENTS %lu\n",NUMBER_OF_COMPARTMENTS];
     [buffer appendFormat:@"#define TOLERANCE 1e-6\n"];
     NEW_LINE;
     [buffer appendString:@"/* Function prototypes -- */\n"];
@@ -656,13 +720,15 @@
     [buffer appendString:@"\tchar *pInputInitialConditionsFile = argv[3];\t\t\t// Get ic datafile patah\n"];
     [buffer appendString:@"\tchar *pStoichiometricMatrixFile = argv[4];\t\t\t// Get stoichiometric matrix path \n"];
     [buffer appendString:@"\tchar *pCirculationMatrixFile = argv[5];\t\t\t// Get circulation matrix path \n"];
-    [buffer appendString:@"\tsscanf(argv[6], \"%lf\", &dblTimeStart);\t\t// Start time\n"];
-    [buffer appendString:@"\tsscanf(argv[7], \"%lf\", &dblTimeStop);\t\t// Stop time\n"];
-    [buffer appendString:@"\tsscanf(argv[8], \"%lf\", &dblTimeStep);\t\t\t// Time step size\n\n"];
+    [buffer appendString:@"\tchar *pVolumeVectorFile = argv[6];\t\t\t// Get circulation matrix path \n"];
+    [buffer appendString:@"\tsscanf(argv[7], \"%lf\", &dblTimeStart);\t\t// Start time\n"];
+    [buffer appendString:@"\tsscanf(argv[8], \"%lf\", &dblTimeStop);\t\t// Stop time\n"];
+    [buffer appendString:@"\tsscanf(argv[9], \"%lf\", &dblTimeStep);\t\t\t// Time step size\n\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Allocate space for the system parameters -- */\n"];
     [buffer appendString:@"\tparameters_object.pModelKineticsParameterVector = gsl_vector_alloc(NUMBER_OF_PARAMETERS);\n"];
-	[buffer appendString:@"\tparameters_object.pModelCirculationMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_STATES);\n"];
+	[buffer appendString:@"\tparameters_object.pModelVolumeVector = gsl_vector_alloc(NUMBER_OF_COMPARTMENTS);\n"];
+    [buffer appendString:@"\tparameters_object.pModelCirculationMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_STATES);\n"];
     [buffer appendString:@"\tparameters_object.pModelStoichiometricMatrix = gsl_matrix_alloc(NUMBER_OF_STATES,NUMBER_OF_RATES);\n"];
     [buffer appendString:@"\tpStateArray = malloc(NUMBER_OF_STATES*sizeof(double));\n"];
     NEW_LINE;
@@ -670,6 +736,7 @@
     [buffer appendString:@"\tpopulateGSLMatrixFromFile(pStoichiometricMatrixFile,parameters_object.pModelStoichiometricMatrix);\n"];
     [buffer appendString:@"\tpopulateGSLMatrixFromFile(pCirculationMatrixFile,parameters_object.pModelCirculationMatrix);\n"];
     [buffer appendString:@"\tpopulateGSLVectorFromFile(pInputParametersFile,parameters_object.pModelKineticsParameterVector);\n"];
+    [buffer appendString:@"\tpopulateGSLVectorFromFile(pVolumeVectorFile,parameters_object.pModelVolumeVector);\n"];
     [buffer appendString:@"\tpopulateDoubleCArraryFromFile(pInputInitialConditionsFile,pStateArray);\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Setup the GSL solver  -- */\n"];

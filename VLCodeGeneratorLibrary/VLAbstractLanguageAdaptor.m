@@ -62,13 +62,56 @@
     return @"u_need_2_override_me";
 }
 
-#pragma mark - general methods
+-(NSString *)generateModelForcingHeaderBufferWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
+
+-(NSString *)generateModelForcingBufferWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
+
+
+#pragma mark - language agnostic generation methods
+-(NSString *)generateModelCompartmentVolumeBufferWithOptions:(NSDictionary *)options
+{
+    // buffer -
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, get the trees -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    NSError *xpath_error;
+    
+    // ok, so we need to load the operations, and generate the kinetics. The functional
+    // form of the rate laws depends upon the type attribute *and* the type attribute on the species
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    
+    // Last, process the compartment volumes -
+    VLPBPKModelPhysicalParameterCalculator *volume_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
+    for (NSXMLElement *compartment in compartment_vector)
+    {
+        // ok, we have a specific compartment,
+        NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
+        
+        // calculate the volume -
+        CGFloat volume = [volume_calculator getVolumeForCompartmentWithSymbol:local_compartment];
+        [buffer appendFormat:@"%f\n",volume];
+    }
+    
+    return [NSString stringWithString:buffer];
+}
+
 -(NSString *)generateModelParametersBufferWithOptions:(NSDictionary *)options
 {
     // counters -
     NSUInteger rate_counter = 0;
     NSUInteger parameter_counter = 0;
-
+    
     // buffer -
     NSMutableString *buffer = [[NSMutableString alloc] init];
     
@@ -94,9 +137,9 @@
                 
                 // ok, we have a specific compartment, build the rate law
                 NSString *rate_law = [self formulateParametersForOperation:operation
-                                                          inCompartment:local_compartment
-                                                            atRateIndex:&rate_counter
-                                                      andParameterIndex:&parameter_counter];
+                                                             inCompartment:local_compartment
+                                                               atRateIndex:&rate_counter
+                                                         andParameterIndex:&parameter_counter];
                 
                 [buffer appendString:rate_law];
             }
@@ -105,9 +148,9 @@
         {
             // ok, we have a specific compartment, build the rate law
             NSString *rate_law = [self formulateParametersForOperation:operation
-                                                      inCompartment:operation_compartment
-                                                        atRateIndex:&rate_counter
-                                                  andParameterIndex:&parameter_counter];
+                                                         inCompartment:operation_compartment
+                                                           atRateIndex:&rate_counter
+                                                     andParameterIndex:&parameter_counter];
             
             
             [buffer appendString:rate_law];
@@ -128,9 +171,9 @@
         else
         {
             NSString *generation_rate_law = [self formulateBasalGenerationParametersForOperation:basal_generation_term
-                                                                                inCompartment:operation_compartment
-                                                                                  atRateIndex:&rate_counter
-                                                                            andParameterIndex:&parameter_counter];
+                                                                                   inCompartment:operation_compartment
+                                                                                     atRateIndex:&rate_counter
+                                                                               andParameterIndex:&parameter_counter];
             
             [buffer appendString:generation_rate_law];
         }
@@ -150,9 +193,9 @@
         else
         {
             NSString *clearance_rate_law = [self formulateBasalClearanceParametersForOperation:basal_clearance_term
-                                                                              inCompartment:operation_compartment
-                                                                                atRateIndex:&rate_counter
-                                                                          andParameterIndex:&parameter_counter];
+                                                                                 inCompartment:operation_compartment
+                                                                                   atRateIndex:&rate_counter
+                                                                             andParameterIndex:&parameter_counter];
             
             [buffer appendString:clearance_rate_law];
         }
@@ -169,9 +212,328 @@
         CGFloat volume = [volume_calculator getVolumeForCompartmentWithSymbol:local_compartment];
         [buffer appendFormat:@"%f\n",volume];
     }
-
-
+    
+    
     return [NSString stringWithString:buffer];
+}
+
+-(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, get the trees -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    
+    // process each compartment -
+    for (NSXMLElement *compartment in compartment_vector)
+    {
+        // get the symbol -
+        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
+        
+        // process each species -
+        for (NSXMLElement *species in state_vector)
+        {
+            // the default is 0.0 -> however, if we have a specifc initial value for this compartment then use this value
+            NSString *xpath_string = [NSString stringWithFormat:@".//initial_amount[@compartment='%@']",compartment_symbol];
+            NSArray *initial_amount_array = [species nodesForXPath:xpath_string error:&xpath_error];
+            if (initial_amount_array == nil || [initial_amount_array count] == 0)
+            {
+                //NSString *species_symbol = [[species attributeForName:@"symbol"] stringValue];
+                [buffer appendString:@"0.0\n"];
+            }
+            else
+            {
+                // ok, we have a record.
+                NSString *average_value = [[[initial_amount_array lastObject] attributeForName:@"average_value"] stringValue];
+                NSString *std_value = [[[initial_amount_array lastObject] attributeForName:@"std_value"] stringValue];
+                
+                // calculate random value -
+                CGFloat float_average_value = [average_value floatValue];
+                CGFloat float_std_value = [std_value floatValue];
+                CGFloat float_ic_value = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:float_average_value
+                                                                                     andStandardDeviation:float_std_value];
+                
+                // add random value to buffer -
+                [buffer appendFormat:@"%f\n",float_ic_value];
+            }
+        }
+    }
+    
+    return [NSString stringWithString:buffer];
+}
+
+
+-(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, get the trees -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    
+    // build calculator -
+    VLPBPKModelPhysicalParameterCalculator *transport_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
+    
+    // Build adj list with the edges -
+    NSDictionary *outbound_adj_dictionary = [self buildOutboundCirculationAdjacencyListForModelTree:model_tree];
+    NSDictionary *inbound_adj_dictionary = [self buildInboundCirculationAdjacencyListForModelTree:model_tree];
+    
+    // need to get the list of circulation_edges -
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSUInteger NUMBER_OF_SPECIES = [state_vector count];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    
+    for (NSXMLElement *row_compartment_node in compartment_vector)
+    {
+        // what compartment are we looking at?
+        NSString *local_compartment_symbol = [[row_compartment_node attributeForName:@"symbol"] stringValue];
+        
+        // process each species -
+        for (NSUInteger outer_species_index = 0;outer_species_index<NUMBER_OF_SPECIES;outer_species_index++)
+        {
+            NSString *row_buffer = [self formulateCirculationMatrixRowForCompartmentSymbol:local_compartment_symbol
+                                                                      withComparmentVector:compartment_vector
+                                                                          withSpeciesIndex:outer_species_index
+                                                                           withStateVector:state_vector
+                                                                         withOutboundEdges:outbound_adj_dictionary
+                                                                          withInboundEdges:inbound_adj_dictionary
+                                                                   withTransportCalculator:transport_calculator];
+            
+            // add a newline and process the next species -
+            [buffer appendString:row_buffer];
+            [buffer appendString:@"\n"];
+        }
+        
+        //[buffer appendString:@"\n"];
+    }
+    
+    return [NSString stringWithString:buffer];
+}
+
+-(NSString *)formulateCirculationMatrixRowForCompartmentSymbol:(NSString *)compartment_symbol
+                                          withComparmentVector:(NSArray *)compartment_array
+                                              withSpeciesIndex:(NSUInteger)species_index
+                                               withStateVector:(NSArray *)species_array
+                                             withOutboundEdges:(NSDictionary *)outbound_adj_dictionary
+                                              withInboundEdges:(NSDictionary *)inbound_adj_dictionary
+                                       withTransportCalculator:(VLPBPKModelPhysicalParameterCalculator *)transport_calculator
+
+
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    NSUInteger NUMBER_OF_SPECIES = [species_array count];
+    
+    for (NSXMLElement *local_compartment_node in compartment_array)
+    {
+        // what col are we?
+        NSString *local_compartment_symbol = [[local_compartment_node attributeForName:@"symbol"] stringValue];
+        
+        if ([local_compartment_symbol isEqualToString:compartment_symbol] == YES)
+        {
+            // ok, if we are here, then we are on the diagnol -
+            
+            // we need to calculate the out terms -
+            
+            // Look up out set for local symbol -
+            NSMutableOrderedSet *outbound_set = [outbound_adj_dictionary objectForKey:local_compartment_symbol];
+            NSUInteger NUMBER_OF_OUTLETS = [outbound_set count];
+            CGFloat flow_rate = 0.0f;
+            for (NSUInteger outlet_index = 0; outlet_index<NUMBER_OF_OUTLETS;outlet_index++)
+            {
+                // target -
+                NSString *target_symbol = [outbound_set objectAtIndex:outlet_index];
+                
+                // Calculate flow -
+                flow_rate = flow_rate + [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
+                                                                                                        andEndCompartmentWithSymbol:target_symbol];
+            }
+            
+            for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+            {
+                if (local_state_index == species_index)
+                {
+                    [buffer appendFormat:@"-%f ",flow_rate];
+                }
+                else
+                {
+                    [buffer appendString:@"0.0 "];
+                }
+            }
+        }
+        else
+        {
+            // ok, we are *off* diagonal - so that means no connection -or- an inflow
+            // to figure out which case, we need to look up to see if we have a record
+            // in the in adj dictionary -
+            NSMutableOrderedSet *inbound_set = [inbound_adj_dictionary objectForKey:compartment_symbol];
+            if ([inbound_set containsObject:local_compartment_symbol] == YES)
+            {
+                
+                CGFloat flow_rate = 0.0f;
+                // Calculate flow -
+                flow_rate = [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
+                                                                                            andEndCompartmentWithSymbol:compartment_symbol];
+                
+                // connection -
+                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+                {
+                    if (local_state_index == species_index)
+                    {
+                        [buffer appendFormat:@"%f ",flow_rate];
+                    }
+                    else
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                }
+            }
+            else
+            {
+                // no connection ...
+                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
+                {
+                    if (local_state_index == species_index)
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                    else
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
+                }
+            }
+        }
+        
+        //[buffer appendString:@"\t"];
+    }
+    
+    return buffer;
+}
+
+-(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, get the trees -
+    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
+    __unused NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
+    
+    NSError *xpath_error;
+    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
+    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
+    NSArray *operations_array = [model_tree nodesForXPath:@".//operationsBlock/operation" error:&xpath_error];
+    NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
+    NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
+    
+    for (NSXMLElement *compartment_node in compartment_vector)
+    {
+        // Get the compartment symbol -
+        NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
+        
+        // go through the species -
+        NSUInteger state_counter = 0;
+        for (NSXMLElement *state_node in state_vector)
+        {
+            // Species -
+            NSString *species_symbol = [[state_node attributeForName:@"symbol"] stringValue];
+            
+            // Strings for operations -
+            NSString *operations_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                          andSpecies:species_symbol
+                                                                                  forOperationsArray:operations_array];
+            
+            NSString *basal_generation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                                andSpecies:species_symbol
+                                                                                   forBasalGenerationArray:basal_generation_array];
+            
+            NSString *basal_degradation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                                 andSpecies:species_symbol
+                                                                                   forBasalDegradationArray:basal_clerance_array];
+            
+            // add these fragments to the buffer -
+            [buffer appendString:operations_columns_buffer];
+            [buffer appendString:basal_generation_columns_buffer];
+            [buffer appendString:basal_degradation_columns_buffer];
+            [buffer appendString:@"\n"];
+            
+            // update -
+            state_counter++;
+        }
+    }
+    
+    return [NSString stringWithString:buffer];
+}
+
+
+
+#pragma mark - general helper methods
+-(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
+                                               andSpecies:(NSString *)speciesSymbol
+                                       forOperationsArray:(NSArray *)array
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    NSError *xpath_error;
+    
+    // process my operation terms -
+    for (NSXMLElement *operation_term in array)
+    {
+        // get the local compartment -
+        NSString *local_compartment_symbol = [[operation_term attributeForName:@"compartment"] stringValue];
+        if ([local_compartment_symbol isEqualToString:compartmentSymbol] == YES)
+        {
+            // ok, we are in the correct compartment -
+            // Do we have the species as a reactant?
+            NSArray *my_local_input_species = [operation_term nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
+            NSArray *my_local_output_species = [operation_term nodesForXPath:@".//listOfOutputs/species_reference" error:&xpath_error];
+            
+            // do we have a match on the inputs -
+            for (NSXMLElement *local_species_input_node in my_local_input_species)
+            {
+                // Get the local species and type flag -
+                NSString *local_species_symbol = [[local_species_input_node attributeForName:@"symbol"] stringValue];
+                NSString *local_type_symbol = [[local_species_input_node attributeForName:@"type"] stringValue];
+                
+                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    // ok, we have a match on a dynamic species -
+                    [buffer appendString:@"-1.0 "];
+                }
+                else if ([local_type_symbol isEqualToString:@"enzyme"] == YES &&
+                         [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    [buffer appendString:@"0.0 "];
+                }
+            }
+            
+            // do we have a match on outputs?
+            for (NSXMLElement *local_species_output_node in my_local_output_species)
+            {
+                // Get the local species and type flag -
+                NSString *local_species_symbol = [[local_species_output_node attributeForName:@"symbol"] stringValue];
+                NSString *local_type_symbol = [[local_species_output_node attributeForName:@"type"] stringValue];
+                
+                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                {
+                    // ok, we have a match on a dynamic species -
+                    [buffer appendString:@"1.0 "];
+                }
+            }
+        }
+        else
+        {
+            // we are *note* in the correct compartment, so the answer is 0.0
+            [buffer appendString:@"0.0 "];
+        }
+    }
+    
+    // return -
+    return buffer;
 }
 
 -(NSString *)formulateBasalClearanceParametersForOperation:(NSXMLElement *)operation
@@ -262,204 +624,6 @@
 }
 
 
--(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options
-{
-    NSMutableString *buffer = [[NSMutableString alloc] init];
-    
-    // ok, get the trees -
-    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
-
-    NSError *xpath_error;
-    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
-    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
-    
-    // process each compartment -
-    for (NSXMLElement *compartment in compartment_vector)
-    {
-        // get the symbol -
-        NSString *compartment_symbol = [[compartment attributeForName:@"symbol"] stringValue];
-        
-        // process each species -
-        for (NSXMLElement *species in state_vector)
-        {
-            // the default is 0.0 -> however, if we have a specifc initial value for this compartment then use this value
-            NSString *xpath_string = [NSString stringWithFormat:@".//initial_amount[@compartment='%@']",compartment_symbol];
-            NSArray *initial_amount_array = [species nodesForXPath:xpath_string error:&xpath_error];
-            if (initial_amount_array == nil || [initial_amount_array count] == 0)
-            {
-                //NSString *species_symbol = [[species attributeForName:@"symbol"] stringValue];
-                [buffer appendString:@"0.0\n"];
-            }
-            else
-            {
-                // ok, we have a record.
-                NSString *average_value = [[[initial_amount_array lastObject] attributeForName:@"average_value"] stringValue];
-                NSString *std_value = [[[initial_amount_array lastObject] attributeForName:@"std_value"] stringValue];
-                
-                // calculate random value -
-                CGFloat float_average_value = [average_value floatValue];
-                CGFloat float_std_value = [std_value floatValue];
-                CGFloat float_ic_value = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:float_average_value
-                                                                                     andStandardDeviation:float_std_value];
-                
-                // add random value to buffer -
-                [buffer appendFormat:@"%f\n",float_ic_value];
-            }
-        }
-    }
-    
-    return [NSString stringWithString:buffer];
-}
-
-
--(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options
-{
-    NSMutableString *buffer = [[NSMutableString alloc] init];
-    
-    // ok, get the trees -
-    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
-    
-    // build calculator -
-    VLPBPKModelPhysicalParameterCalculator *transport_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
-    
-    // Build adj list with the edges -
-    NSDictionary *outbound_adj_dictionary = [self buildOutboundCirculationAdjacencyListForModelTree:model_tree];
-    NSDictionary *inbound_adj_dictionary = [self buildInboundCirculationAdjacencyListForModelTree:model_tree];
-    
-    // need to get the list of circulation_edges -
-    NSError *xpath_error;
-    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
-    NSUInteger NUMBER_OF_SPECIES = [state_vector count];
-    
-    NSArray *edge_array = [model_tree nodesForXPath:@".//listOfCirculationEdges/edge" error:&xpath_error];
-    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
-    
-    for (NSXMLElement *row_compartment_node in compartment_vector)
-    {
-        // what compartment are we looking at?
-        NSString *local_compartment_symbol = [[row_compartment_node attributeForName:@"symbol"] stringValue];
-        
-        // process each species -
-        for (NSUInteger outer_species_index = 0;outer_species_index<NUMBER_OF_SPECIES;outer_species_index++)
-        {
-            NSString *row_buffer = [self formulateCirculationMatrixRowForCompartmentSymbol:local_compartment_symbol
-                                                                      withComparmentVector:compartment_vector
-                                                                          withSpeciesIndex:outer_species_index
-                                                                           withStateVector:state_vector
-                                                                         withOutboundEdges:outbound_adj_dictionary
-                                                                         withInboundEdges:inbound_adj_dictionary
-                                                                   withTransportCalculator:transport_calculator];
-            
-            // add a newline and process the next species -
-            [buffer appendString:row_buffer];
-            [buffer appendString:@"\n"];
-        }
-        
-        [buffer appendString:@"\n"];
-    }
-    
-    return [NSString stringWithString:buffer];
-}
-
--(NSString *)formulateCirculationMatrixRowForCompartmentSymbol:(NSString *)compartment_symbol
-                                          withComparmentVector:(NSArray *)compartment_array
-                                              withSpeciesIndex:(NSUInteger)species_index
-                                               withStateVector:(NSArray *)species_array
-                                             withOutboundEdges:(NSDictionary *)outbound_adj_dictionary
-                                             withInboundEdges:(NSDictionary *)inbound_adj_dictionary
-                                       withTransportCalculator:(VLPBPKModelPhysicalParameterCalculator *)transport_calculator
-
-
-{
-    NSMutableString *buffer = [[NSMutableString alloc] init];
-    NSUInteger NUMBER_OF_SPECIES = [species_array count];
-    
-    for (NSXMLElement *local_compartment_node in compartment_array)
-    {
-        // what col are we?
-        NSString *local_compartment_symbol = [[local_compartment_node attributeForName:@"symbol"] stringValue];
-        
-        if ([local_compartment_symbol isEqualToString:compartment_symbol] == YES)
-        {
-            // ok, if we are here, then we are on the diagnol -
-            
-            // we need to calculate the out terms -
-            
-            // Look up out set for local symbol -
-            NSMutableOrderedSet *outbound_set = [outbound_adj_dictionary objectForKey:local_compartment_symbol];
-            NSUInteger NUMBER_OF_OUTLETS = [outbound_set count];
-            CGFloat flow_rate = 0.0f;
-            for (NSUInteger outlet_index = 0; outlet_index<NUMBER_OF_OUTLETS;outlet_index++)
-            {
-                // target -
-                NSString *target_symbol = [outbound_set objectAtIndex:outlet_index];
-                
-                // Calculate flow -
-                flow_rate = flow_rate + [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
-                                                                                                    andEndCompartmentWithSymbol:target_symbol];
-            }
-            
-            for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
-            {
-                if (local_state_index == species_index)
-                {
-                    [buffer appendFormat:@"-1.0*%f ",flow_rate];
-                }
-                else
-                {
-                    [buffer appendString:@"0.0 "];
-                }
-            }
-        }
-        else
-        {
-            // ok, we are *off* diagonal - so that means no connection -or- an inflow
-            // to figure out which case, we need to look up to see if we have a record
-            // in the in adj dictionary -
-            NSMutableOrderedSet *inbound_set = [inbound_adj_dictionary objectForKey:compartment_symbol];
-            if ([inbound_set containsObject:local_compartment_symbol] == YES)
-            {
-                
-                CGFloat flow_rate = 0.0f;
-                // Calculate flow -
-                flow_rate = [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
-                                                                                            andEndCompartmentWithSymbol:compartment_symbol];
-                
-                // connection -
-                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
-                {
-                    if (local_state_index == species_index)
-                    {
-                        [buffer appendFormat:@"1.0*%f ",flow_rate];
-                    }
-                    else
-                    {
-                        [buffer appendString:@"0.0 "];
-                    }
-                }
-            }
-            else
-            {
-                // no connection ...
-                for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
-                {
-                    if (local_state_index == species_index)
-                    {
-                        [buffer appendString:@"0.0 "];
-                    }
-                    else
-                    {
-                        [buffer appendString:@"0.0 "];
-                    }
-                }
-            }
-        }
-        
-        [buffer appendString:@"\t"];
-    }
-    
-    return buffer;
-}
 
 -(NSDictionary *)buildOutboundCirculationAdjacencyListForModelTree:(NSXMLDocument *)model_tree
 {
@@ -530,120 +694,6 @@
 }
 
 
--(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options
-{
-    NSMutableString *buffer = [[NSMutableString alloc] init];
-    
-    // ok, get the trees -
-    NSXMLDocument *model_tree = [options objectForKey:kXMLModelTree];
-    __unused NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
-    
-    NSError *xpath_error;
-    NSArray *state_vector = [model_tree nodesForXPath:@".//listOfSpecies/species" error:&xpath_error];
-    NSArray *compartment_vector = [model_tree nodesForXPath:@".//listOfCompartments/compartment" error:&xpath_error];
-    NSArray *operations_array = [model_tree nodesForXPath:@".//operationsBlock/operation" error:&xpath_error];
-    NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
-    NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
-    
-    for (NSXMLElement *compartment_node in compartment_vector)
-    {
-        // Get the compartment symbol -
-        NSString *compartment_symbol = [[compartment_node attributeForName:@"symbol"] stringValue];
-        
-        // go through the species -
-        for (NSXMLElement *state_node in state_vector)
-        {
-            // Species -
-            NSString *species_symbol = [[state_node attributeForName:@"symbol"] stringValue];
-            
-            // Strings for operations -
-            NSString *operations_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
-                                                                                          andSpecies:species_symbol
-                                                                                  forOperationsArray:operations_array];
-            
-            NSString *basal_generation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
-                                                                                                andSpecies:species_symbol
-                                                                                   forBasalGenerationArray:basal_generation_array];
-            
-            NSString *basal_degradation_columns_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
-                                                                                                 andSpecies:species_symbol
-                                                                                   forBasalDegradationArray:basal_clerance_array];
-            
-            // add these fragments to the buffer -
-            [buffer appendString:operations_columns_buffer];
-            [buffer appendString:basal_generation_columns_buffer];
-            [buffer appendString:basal_degradation_columns_buffer];
-            [buffer appendString:@"\n"];
-        }
-    }
-    
-    return [NSString stringWithString:buffer];
-}
-
--(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
-                                               andSpecies:(NSString *)speciesSymbol
-                                       forOperationsArray:(NSArray *)array
-{
-    NSMutableString *buffer = [[NSMutableString alloc] init];
-    NSError *xpath_error;
-    
-    // process my operation terms -
-    for (NSXMLElement *operation_term in array)
-    {
-        // get the local compartment -
-        NSString *local_compartment_symbol = [[operation_term attributeForName:@"compartment"] stringValue];
-        if (([local_compartment_symbol isEqualToString:compartmentSymbol] == YES || [local_compartment_symbol isEqualToString:@"all"] == YES))
-        {
-            // ok, we are in the correct compartment -
-            // Do we have the species as a reactant?
-            NSArray *my_local_input_species = [operation_term nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
-            NSArray *my_local_output_species = [operation_term nodesForXPath:@".//listOfOutputs/species_reference" error:&xpath_error];
-            
-            // do we have a match on the inputs -
-            for (NSXMLElement *local_species_input_node in my_local_input_species)
-            {
-                // Get the local species and type flag -
-                NSString *local_species_symbol = [[local_species_input_node attributeForName:@"symbol"] stringValue];
-                NSString *local_type_symbol = [[local_species_input_node attributeForName:@"type"] stringValue];
-                
-                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
-                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
-                {
-                    // ok, we have a match on a dynamic species -
-                    [buffer appendString:@"-1.0 "];
-                }
-                else if ([local_type_symbol isEqualToString:@"enzyme"] == YES &&
-                         [local_species_symbol isEqualToString:speciesSymbol] == YES)
-                {
-                    [buffer appendString:@"0.0 "];
-                }
-            }
-            
-            // do we have a match on outputs?
-            for (NSXMLElement *local_species_output_node in my_local_output_species)
-            {
-                // Get the local species and type flag -
-                NSString *local_species_symbol = [[local_species_output_node attributeForName:@"symbol"] stringValue];
-                NSString *local_type_symbol = [[local_species_output_node attributeForName:@"type"] stringValue];
-                
-                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
-                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
-                {
-                    // ok, we have a match on a dynamic species -
-                    [buffer appendString:@"1.0 "];
-                }
-            }
-        }
-        else
-        {
-            // we are *note* in the correct compartment, so the answer is 0.0
-            [buffer appendString:@"0.0 "];
-        }
-    }
-    
-    // return -
-    return buffer;
-}
 
 
 -(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
