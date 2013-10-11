@@ -148,6 +148,22 @@
     {
         flow_rate = [self calculateLungBloodFlowRateFromModelTree:[self myModelTree]];
     }
+    else if ([start_symbol isCaseInsensitiveLike:kLiverSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES)
+    {
+        flow_rate = [self calculateLiverBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kHeartSymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES)
+    {
+        flow_rate = [self calculateHeartBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+    else if ([start_symbol isCaseInsensitiveLike:kKidneySymbol] == YES &&
+             [end_symbol isCaseInsensitiveLike:kVenousBloodPoolSymbol] == YES)
+    {
+        flow_rate = [self calculateKidneyBloodFlowRateFromModelTree:[self myModelTree]];
+    }
+
 
     return flow_rate;
 }
@@ -160,8 +176,19 @@
     // hard code for now -
     CGFloat literature_mean_value = 1.32f;
     CGFloat literature_std_value = 0.22f;
-    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
-                                                            andStandardDeviation:literature_std_value];
+    
+    if (_liverBloodFlowRate == -1)
+    {
+        flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                                andStandardDeviation:literature_std_value];
+        
+        _liverBloodFlowRate = flow_rate;
+    }
+    else
+    {
+        flow_rate = _liverBloodFlowRate;
+    }
+    
     
     return flow_rate;
 }
@@ -197,10 +224,21 @@
     // hard code for now -
     CGFloat literature_mean_value = 1.17f;
     CGFloat literature_std_value = 0.25f;
-    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
-                                                            andStandardDeviation:literature_std_value];
-
     
+    if (_kidneyBloodFlowRate == -1)
+    {
+        flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                                andStandardDeviation:literature_std_value];
+        
+        _kidneyBloodFlowRate = flow_rate;
+
+    }
+    else
+    {
+        flow_rate = _kidneyBloodFlowRate;
+    }
+    
+
     return flow_rate;
 }
 
@@ -211,8 +249,20 @@
     // hard code for now -
     CGFloat literature_mean_value = 0.73f;
     CGFloat literature_std_value = 0.25f;
-    flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
-                                                            andStandardDeviation:literature_std_value];
+    
+    if (_heartBloodFlowRate == -1)
+    {
+        flow_rate = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:literature_mean_value
+                                                                andStandardDeviation:literature_std_value];
+        
+        _heartBloodFlowRate = flow_rate;
+
+    }
+    else
+    {
+        flow_rate = _heartBloodFlowRate;
+    }
+    
     
     return flow_rate;
 }
@@ -387,6 +437,9 @@
     
     // set the _lungBloodFlowRate
     _lungBloodFlowRate = -1.0f;
+    _heartBloodFlowRate = -1.0f;
+    _kidneyBloodFlowRate = -1.0f;
+    _liverBloodFlowRate = -1.0f;
 }
 
 -(void)cleanMyMemory

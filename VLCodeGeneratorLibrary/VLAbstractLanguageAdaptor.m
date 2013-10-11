@@ -354,6 +354,8 @@
             [buffer appendString:row_buffer];
             [buffer appendString:@"\n"];
         }
+        
+        [buffer appendString:@"\n"];
     }
     
     return [NSString stringWithString:buffer];
@@ -417,12 +419,18 @@
             NSMutableOrderedSet *inbound_set = [inbound_adj_dictionary objectForKey:compartment_symbol];
             if ([inbound_set containsObject:local_compartment_symbol] == YES)
             {
+                
+                CGFloat flow_rate = 0.0f;
+                // Calculate flow -
+                flow_rate = [transport_calculator calculateVolumetricBloodFlowRateWithBetweenStartCompartmentWithSymbol:local_compartment_symbol
+                                                                                            andEndCompartmentWithSymbol:compartment_symbol];
+                
                 // connection -
                 for (NSUInteger local_state_index = 0;local_state_index<NUMBER_OF_SPECIES;local_state_index++)
                 {
                     if (local_state_index == species_index)
                     {
-                        [buffer appendString:@"CCC "];
+                        [buffer appendFormat:@"1.0*%f ",flow_rate];
                     }
                     else
                     {
@@ -446,6 +454,8 @@
                 }
             }
         }
+        
+        [buffer appendString:@"\t"];
     }
     
     return buffer;

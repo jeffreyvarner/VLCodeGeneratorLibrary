@@ -26,7 +26,11 @@
     CGFloat _lungVolume;
     CGFloat _venousBloodVolume;
     CGFloat _arterialBloodVolume;
+    
     CGFloat _lungBloodFlowRate;
+    CGFloat _heartBloodFlowRate;
+    CGFloat _kidneyBloodFlowRate;
+    CGFloat _liverBloodFlowRate;
 }
 
 // public properties -
