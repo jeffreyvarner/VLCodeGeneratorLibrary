@@ -29,6 +29,14 @@
     [buffer appendString:@"#include <gsl/gsl_vector.h>\n"];
     [buffer appendString:@"#include <gsl/gsl_blas.h>\n\n"];
     [buffer appendString:@"\n"];
+    [buffer appendString:@"/* parameter struct */\n"];
+    [buffer appendString:@"struct VLForcingParameters\n"];
+    [buffer appendString:@"{\n"];
+    [buffer appendString:@"\tgsl_vector *pModelKineticsParameterVector;\n"];
+    [buffer appendString:@"\tgsl_vector *pModelVolumeVector;\n"];
+    [buffer appendString:@"\tgsl_matrix *pModelCirculationMatrix;\n"];
+    [buffer appendString:@"\tgsl_matrix *pModelStoichiometricMatrix;\n"];
+    [buffer appendString:@"};\n\n"];
     [buffer appendString:@"/* public methods */\n"];
     [buffer appendString:@"void Forcing(double t,double const state_vector[], gsl_vector *pForcingVector, void* parameter_object);\n\n"];
     [buffer appendString:@"\n"];
@@ -53,6 +61,8 @@
     [buffer appendString:@"{\n"];
     [buffer appendString:@"\t/* Implement your specific input logic here -- */\n"];
     [buffer appendString:@"\tgsl_vector_set_zero(pForcingVector);\n"];
+    [buffer appendString:@"\tstruct VLForcingParameters *parameter_struct = (struct VLForcingParameters*)parameter_object;\n"];
+    [buffer appendString:@"\n"];
     [buffer appendString:@"}\n"];
     
     // return -

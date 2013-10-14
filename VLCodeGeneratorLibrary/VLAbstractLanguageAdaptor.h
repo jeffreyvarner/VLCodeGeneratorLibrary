@@ -36,6 +36,7 @@
 
 // make -
 -(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options;
+-(NSString *)generateModelSolveModelScriptBufferWithOptions:(NSDictionary *)options;
 
 // matrix routines -
 -(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options;
@@ -50,6 +51,9 @@
 -(NSUInteger)calculateNumberOfCompartmentsInModelTree:(NSXMLDocument *)model_tree;
 -(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree;
 -(NSUInteger)calculateNumberOfParametersInModelTree:(NSXMLDocument *)model_tree;
+
+// debug methods -
+-(NSString *)generateModelDebugBufferWithOptions:(NSDictionary *)options;
 
 
 @end
