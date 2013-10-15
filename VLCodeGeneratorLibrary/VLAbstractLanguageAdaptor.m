@@ -177,6 +177,10 @@
                 }
             }
         }
+        else if ([operation_type isCaseInsensitiveLike:@"First-order"] == YES)
+        {
+            [buffer appendFormat:@"%lu k_%@_%@ \n",parameter_counter++,operation_name,operation_compartment];
+        }
     }
     
     // ok, so let's process the basalGenerationBlock -
@@ -269,33 +273,14 @@
         // ok, get some attributes of the operation -
         NSString *operation_compartment = [[operation attributeForName:@"compartment"] stringValue];
         
-        if ([operation_compartment isEqualToString:@"all"] == YES)
-        {
-            // get the list of compartments, and build this rate law in each -
-            for (NSXMLElement *compartment in compartment_vector)
-            {
-                NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
-                
-                // ok, we have a specific compartment, build the rate law
-                NSString *rate_law = [self formulateParametersForOperation:operation
-                                                             inCompartment:local_compartment
-                                                               atRateIndex:&rate_counter
-                                                         andParameterIndex:&parameter_counter];
-                
-                [buffer appendString:rate_law];
-            }
-        }
-        else
-        {
-            // ok, we have a specific compartment, build the rate law
-            NSString *rate_law = [self formulateParametersForOperation:operation
-                                                         inCompartment:operation_compartment
-                                                           atRateIndex:&rate_counter
-                                                     andParameterIndex:&parameter_counter];
-            
-            
-            [buffer appendString:rate_law];
-        }
+        // ok, we have a specific compartment, build the rate law
+        NSString *rate_law = [self formulateParametersForOperation:operation
+                                                     inCompartment:operation_compartment
+                                                       atRateIndex:&rate_counter
+                                                 andParameterIndex:&parameter_counter];
+        
+        
+        [buffer appendString:rate_law];
     }
     
     // ok, so let's process the basalGenerationBlock -
@@ -627,53 +612,68 @@
 {
     NSMutableString *buffer = [[NSMutableString alloc] init];
     NSError *xpath_error;
-    BOOL MATCH_FLAG = NO;
     
     // process my operation terms -
     for (NSXMLElement *operation_term in array)
     {
         // get the local compartment -
         NSString *local_compartment_symbol = [[operation_term attributeForName:@"compartment"] stringValue];
+        
         if ([local_compartment_symbol isEqualToString:compartmentSymbol] == YES)
         {
             // ok, we are in the correct compartment -
-            // Do we have the species as a reactant?
-            NSArray *my_local_input_species = [operation_term nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
-            NSArray *my_local_output_species = [operation_term nodesForXPath:@".//listOfOutputs/species_reference" error:&xpath_error];
             
-            // do we have a match on the inputs -
-            for (NSXMLElement *local_species_input_node in my_local_input_species)
+            // is this species *either* a reactant -or- product?
+            NSString *xpath_reactants = [NSString stringWithFormat:@".//listOfInputs/species_reference[@symbol='%@']/@type",speciesSymbol];
+            NSString *xpath_products = [NSString stringWithFormat:@".//listOfOutputs/species_reference[@symbol='%@']/@type",speciesSymbol];
+            NSArray *look_ahead_reactants = [operation_term nodesForXPath:xpath_reactants error:&xpath_error];
+            NSArray *look_ahead_products = [operation_term nodesForXPath:xpath_products error:&xpath_error];
+            
+            if ((look_ahead_products!=nil || look_ahead_reactants!=nil) &&
+                ([look_ahead_reactants count]>0 || [look_ahead_products count]>0))
             {
-                // Get the local species and type flag -
-                NSString *local_species_symbol = [[local_species_input_node attributeForName:@"symbol"] stringValue];
-                NSString *local_type_symbol = [[local_species_input_node attributeForName:@"type"] stringValue];
+                // Do we have the species as a reactant?
+                NSArray *my_local_input_species = [operation_term nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
+                NSArray *my_local_output_species = [operation_term nodesForXPath:@".//listOfOutputs/species_reference" error:&xpath_error];
                 
-                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
-                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                // do we have a match on the inputs -
+                for (NSXMLElement *local_species_input_node in my_local_input_species)
                 {
-                    // ok, we have a match on a dynamic species -
-                    [buffer appendString:@"-1.0 "];
+                    // Get the local species and type flag -
+                    NSString *local_species_symbol = [[local_species_input_node attributeForName:@"symbol"] stringValue];
+                    NSString *local_type_symbol = [[local_species_input_node attributeForName:@"type"] stringValue];
+                    
+                    if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                        [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                    {
+                        // ok, we have a match on a dynamic species -
+                        [buffer appendString:@"-1.0 "];
+                    }
+                    else if ([local_type_symbol isEqualToString:@"enzyme"] == YES &&
+                             [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                    {
+                        [buffer appendString:@"0.0 "];
+                    }
                 }
-                else if ([local_type_symbol isEqualToString:@"enzyme"] == YES &&
-                         [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                
+                // do we have a match on outputs?
+                for (NSXMLElement *local_species_output_node in my_local_output_species)
                 {
-                    [buffer appendString:@"0.0 "];
+                    // Get the local species and type flag -
+                    NSString *local_species_symbol = [[local_species_output_node attributeForName:@"symbol"] stringValue];
+                    NSString *local_type_symbol = [[local_species_output_node attributeForName:@"type"] stringValue];
+                    
+                    if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
+                        [local_species_symbol isEqualToString:speciesSymbol] == YES)
+                    {
+                        // ok, we have a match on a dynamic species -
+                        [buffer appendString:@"1.0 "];
+                    }
                 }
             }
-            
-            // do we have a match on outputs?
-            for (NSXMLElement *local_species_output_node in my_local_output_species)
+            else
             {
-                // Get the local species and type flag -
-                NSString *local_species_symbol = [[local_species_output_node attributeForName:@"symbol"] stringValue];
-                NSString *local_type_symbol = [[local_species_output_node attributeForName:@"type"] stringValue];
-                
-                if ([local_type_symbol isEqualToString:@"dynamic"] == YES &&
-                    [local_species_symbol isEqualToString:speciesSymbol] == YES)
-                {
-                    // ok, we have a match on a dynamic species -
-                    [buffer appendString:@"1.0 "];
-                }
+                [buffer appendString:@"0.0 "];
             }
         }
         else
@@ -681,12 +681,6 @@
             // we are *note* in the correct compartment, so the answer is 0.0
             [buffer appendString:@"0.0 "];
         }
-    }
-    
-    // always return a zero -
-    if ([buffer length] == 0)
-    {
-        [buffer appendString:@"0.0 "];
     }
     
     // return -
@@ -1081,32 +1075,11 @@
         // ok, get some attributes of the operation -
         NSString *operation_compartment = [[operation attributeForName:@"compartment"] stringValue];
         
-        if ([operation_compartment isEqualToString:@"all"] == YES)
-        {
-            // get the list of compartments, and build this rate law in each -
-            for (NSXMLElement *compartment in compartment_vector)
-            {
-                NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
-                
-                // ok, we have a specific compartment, build the rate law
-                __unused NSString *rate_law = [self formulateParametersForOperation:operation
-                                                             inCompartment:local_compartment
-                                                               atRateIndex:&rate_counter
-                                                         andParameterIndex:&parameter_counter];
-                
-            }
-        }
-        else
-        {
-            // ok, we have a specific compartment, build the rate law
-            __unused NSString *rate_law = [self formulateParametersForOperation:operation
-                                                         inCompartment:operation_compartment
-                                                           atRateIndex:&rate_counter
-                                                     andParameterIndex:&parameter_counter];
-            
-            
-            
-        }
+        // ok, we have a specific compartment, build the rate law
+        __unused NSString *rate_law = [self formulateParametersForOperation:operation
+                                                              inCompartment:operation_compartment
+                                                                atRateIndex:&rate_counter
+                                                          andParameterIndex:&parameter_counter];
     }
     
     // ok, so let's process the basalGenerationBlock -

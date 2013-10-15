@@ -329,17 +329,16 @@
         for (NSXMLElement *reactant in reactants_array)
         {
             NSString *reactant_type = [[reactant attributeForName:@"type"] stringValue];
+            NSString *reactant_symbol = [[reactant attributeForName:@"symbol"] stringValue];
             if ([reactant_type isEqualToString:@"dynamic"] == YES)
             {
-                // Get the reactant symbol -
-                NSString *reactant_symbol = [[reactant attributeForName:@"symbol"] stringValue];
-                
                 // build the line -
                 [buffer appendFormat:@"\tdouble K_%@_%@_%@ = gsl_vector_get(pV,%lu);\n",operation_name,reactant_symbol,compartment,(*parameter_index)++];
             }
             else if ([reactant_type isEqualToString:@"enzyme"] == YES)
             {
-                enzyme_symbol = [NSString stringWithFormat:@"E_%@",compartment];
+                // Get the reactant symbol -
+                enzyme_symbol = [NSString stringWithFormat:@"%@_%@",reactant_symbol,compartment];
             }
         }
         
@@ -389,9 +388,15 @@
         [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
         [buffer appendString:@"\n"];
     }
-    else if ([operation_type isCaseInsensitiveLike:@"FIRST_ORDER"] == YES)
+    else if ([operation_type isCaseInsensitiveLike:@"First-order"] == YES)
     {
-        NSString *species = [[operation attributeForName:@"symbol"] stringValue];
+        // get the reactants -
+        NSError *xpath_error;
+        NSArray *reactant_array = [operation nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
+        
+        // This is first order, so there should be only *one* reactant -
+        NSXMLElement *reactant_node = [reactant_array lastObject];
+        NSString *species = [[reactant_node attributeForName:@"symbol"] stringValue];
         NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
         
         // alias the parameter value -
@@ -401,7 +406,6 @@
         [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
         [buffer appendString:@"\n"];
     }
-    
     
     // return -
     return [NSString stringWithString:buffer];
@@ -461,6 +465,7 @@
     [buffer appendString:@"/* Problem specific define statements -- */\n"];
     [buffer appendFormat:@"#define NUMBER_OF_RATES %lu\n",NUMBER_OF_RATES];
     [buffer appendFormat:@"#define NUMBER_OF_STATES %lu\n",NUMBER_OF_STATES];
+    [buffer appendString:@"#define EPSILON 1e-8\n"];
     NEW_LINE;
     
     [buffer appendString:@"int MassBalances(double t,const double x[],double f[],void * parameter_object)\n"];
@@ -485,7 +490,15 @@
     [buffer appendString:@"\t/* Populate the state_vector -- */\n"];
     [buffer appendString:@"\tfor(int state_index = 0; state_index < NUMBER_OF_STATES; state_index++)\n"];
     [buffer appendString:@"\t{\n"];
-    [buffer appendString:@"\t\tgsl_vector_set(pStateVector,state_index,x[state_index]);\n"];
+    [buffer appendString:@"\t\t/* correct negative ... */\n"];
+    [buffer appendString:@"\t\tif (x[state_index]<0)\n"];
+    [buffer appendString:@"\t\t{\n"];
+    [buffer appendString:@"\t\t\tgsl_vector_set(pStateVector,state_index,EPSILON);\n"];
+    [buffer appendString:@"\t\t}\n"];
+    [buffer appendString:@"\t\telse\n"];
+    [buffer appendString:@"\t\t{\n"];
+    [buffer appendString:@"\t\t\tgsl_vector_set(pStateVector,state_index,x[state_index]);\n"];
+    [buffer appendString:@"\t\t}\n"];
     [buffer appendString:@"\t}\n"];
     NEW_LINE;
     [buffer appendString:@"\t/* Calculate the right hand side -- */\n"];
@@ -887,6 +900,13 @@
     [buffer appendString:@"\tfor (int state_index=0; state_index<NUMBER_OF_STATES; state_index++)\n"];
     [buffer appendString:@"\t{\n"];
     [buffer appendString:@"\t\tdouble tmp_state_value = *(pDoubleResultsArray + state_index);\n"];
+    NEW_LINE;
+    [buffer appendString:@"\t\t/* correct for negavtives */\n"];
+    [buffer appendString:@"\t\tif (tmp_state_value<0)\n"];
+    [buffer appendString:@"\t\t{\n"];
+    [buffer appendString:@"\t\t\ttmp_state_value = 0.0;\n"];
+    [buffer appendString:@"\t\t}\n"];
+    NEW_LINE;
     [buffer appendString:@"\t\tfprintf(output_file,\"%g \",tmp_state_value);\n"];
     [buffer appendString:@"\t}\n"];
     [buffer appendString:@"\tfprintf(output_file,\"\\n\");\n"];
@@ -956,7 +976,7 @@
     
     for (NSString *file_name in file_name_array)
     {
-        [buffer appendFormat:@"%@.o %@ ",file_name,file_name];
+        [buffer appendFormat:@"%@.o %@ %@.c %@.h ",file_name,file_name,file_name,file_name];
     }
     NEW_LINE;
     
