@@ -116,7 +116,6 @@
     NSMutableString *buffer = [[NSMutableString alloc] init];
     NSUInteger counter = 1;
     NSUInteger parameter_counter = 1;
-    NSUInteger rate_counter = 0;
     
     // list of comparments -
     [buffer appendString:@"// List of compartments -- \n"];
@@ -202,6 +201,19 @@
         
         // write -
         [buffer appendFormat:@"%lu clearance_rate_%@_%@ \n",parameter_counter++,clearance_symbol,operation_compartment];
+    }
+    
+    // process mass transfer block -
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
+    for (NSXMLElement *mass_transfer_term in mass_transfer_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_from_compartment = [[mass_transfer_term attributeForName:@"from_compartment"] stringValue];
+        NSString *operation_to_compartment = [[mass_transfer_term attributeForName:@"to_compartment"] stringValue];
+        NSString *transfer_symbol = [[mass_transfer_term attributeForName:@"symbol"] stringValue];
+        
+        // write -
+        [buffer appendFormat:@"%lu mass_transfer_rate_%@_%@_%@ \n",parameter_counter++,transfer_symbol,operation_from_compartment,operation_to_compartment];
     }
     
     return [NSString stringWithString:buffer];
@@ -330,18 +342,22 @@
         }
     }
     
-//    // Last, process the compartment volumes -
-//    VLPBPKModelPhysicalParameterCalculator *volume_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
-//    for (NSXMLElement *compartment in compartment_vector)
-//    {
-//        // ok, we have a specific compartment,
-//        NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
-//        
-//        // calculate the volume -
-//        CGFloat volume = [volume_calculator getVolumeForCompartmentWithSymbol:local_compartment];
-//        [buffer appendFormat:@"%f\n",volume];
-//    }
-    
+    // Last, process transfer block -
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
+    for (NSXMLElement *mass_transfer_term in mass_transfer_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[mass_transfer_term attributeForName:@"from_compartment"] stringValue];
+        
+        // formulate transfer rate law -
+        NSString *mass_transfer_rate_law = [self formulateMassTransferRateParametersForOperation:mass_transfer_term
+                                                                                   inCompartment:operation_compartment
+                                                                                     atRateIndex:&rate_counter
+                                                                               andParameterIndex:&parameter_counter];
+        
+        [buffer appendString:mass_transfer_rate_law];
+    }
+
     
     return [NSString stringWithString:buffer];
 }
@@ -557,6 +573,7 @@
     NSArray *operations_array = [model_tree nodesForXPath:@".//operationsBlock/operation" error:&xpath_error];
     NSArray *basal_generation_array = [model_tree nodesForXPath:@".//basalGenerationBlock/generation_term" error:&xpath_error];
     NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
     
     for (NSXMLElement *compartment_node in compartment_vector)
     {
@@ -583,10 +600,14 @@
                                                                                                  andSpecies:species_symbol
                                                                                    forBasalDegradationArray:basal_clerance_array];
             
+            NSString *mass_transfer_buffer = [self formulateStoichiometricEntriesForCompartment:compartment_symbol
+                                                                                     andSpecies:species_symbol
+                                                                           forMassTransferArray:mass_transfer_array];
             // add these fragments to the buffer -
             [buffer appendString:operations_columns_buffer];
             [buffer appendString:basal_generation_columns_buffer];
             [buffer appendString:basal_degradation_columns_buffer];
+            [buffer appendString:mass_transfer_buffer];
             [buffer appendString:@"\n"];
             
             // update -
@@ -606,6 +627,7 @@
 {
     NSMutableString *buffer = [[NSMutableString alloc] init];
     NSError *xpath_error;
+    BOOL MATCH_FLAG = NO;
     
     // process my operation terms -
     for (NSXMLElement *operation_term in array)
@@ -661,6 +683,12 @@
         }
     }
     
+    // always return a zero -
+    if ([buffer length] == 0)
+    {
+        [buffer appendString:@"0.0 "];
+    }
+    
     // return -
     return buffer;
 }
@@ -692,6 +720,34 @@
     // return the buffer -
     return [NSString stringWithString:buffer];
 }
+
+-(NSString *)formulateMassTransferRateParametersForOperation:(NSXMLElement *)operation
+                                               inCompartment:(NSString *)compartment
+                                                 atRateIndex:(NSUInteger *)rate_index
+                                           andParameterIndex:(NSUInteger *)parameter_index
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // ok, we have a record.
+    NSString *average_value = [[operation attributeForName:@"average_rate_constant"] stringValue];
+    NSString *std_value = [[operation attributeForName:@"std_rate_constant"] stringValue];
+    
+    // calculate random value -
+    CGFloat float_average_value = [average_value floatValue];
+    CGFloat float_std_value = [std_value floatValue];
+    CGFloat float_sample_value = [VLCoreUtilitiesLib generateSampleFromNormalDistributionWithMean:float_average_value
+                                                                             andStandardDeviation:float_std_value];
+    
+    // add to buffer -
+    [buffer appendFormat:@"%f\n",float_sample_value];
+    
+    // update parameter index -
+    (*parameter_index)++;
+    
+    // return the buffer -
+    return [NSString stringWithString:buffer];
+}
+
 
 -(NSString *)formulateBasalGenerationParametersForOperation:(NSXMLElement *)operation
                                            inCompartment:(NSString *)compartment
@@ -884,6 +940,40 @@
     return buffer;
 }
 
+-(NSString *)formulateStoichiometricEntriesForCompartment:(NSString *)compartmentSymbol
+                                               andSpecies:(NSString *)speciesSymbol
+                                     forMassTransferArray:(NSArray *)array
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    for (NSXMLElement *mass_transfer_term in array)
+    {
+        // which compartment and symbol do we have?
+        NSString *local_compartment_from_symbol = [[mass_transfer_term attributeForName:@"from_compartment"] stringValue];
+        NSString *local_compartment_to_symbol = [[mass_transfer_term attributeForName:@"to_compartment"] stringValue];
+        NSString *local_species_symbol = [[mass_transfer_term attributeForName:@"symbol"] stringValue];
+        
+        // do we have a match -
+        // ok, so do we have a match?
+        if ([local_compartment_from_symbol isEqualToString:compartmentSymbol] == YES &&
+            [local_species_symbol isEqualToString:speciesSymbol] == YES)
+        {
+            [buffer appendString:@"-1.0 "];
+        }
+        else if ([local_compartment_to_symbol isEqualToString:compartmentSymbol] == YES &&
+                 [local_species_symbol isEqualToString:speciesSymbol] == YES)
+        {
+            [buffer appendString:@"1.0 "];
+        }
+        else
+        {
+            [buffer appendString:@"0.0 "];
+        }
+    }
+    
+    // return -
+    return buffer;
+}
 
 -(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree
 {
@@ -965,6 +1055,12 @@
         {
             number_of_rates++;
         }
+    }
+    
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
+    for (NSXMLElement *mass_transfer_term in mass_transfer_array)
+    {
+        number_of_rates++;
     }
     
     return number_of_rates;
@@ -1054,20 +1150,21 @@
         }
     }
     
-//    // Last, process the compartment volumes -
-//    VLPBPKModelPhysicalParameterCalculator *volume_calculator = [VLPBPKModelPhysicalParameterCalculator buildCalculatorForModelTree:model_tree];
-//    for (NSXMLElement *compartment in compartment_vector)
-//    {
-//        // ok, we have a specific compartment,
-//        NSString *local_compartment = [[compartment attributeForName:@"symbol"] stringValue];
-//        
-//        // calculate the volume -
-//        __unused CGFloat volume = [volume_calculator getVolumeForCompartmentWithSymbol:local_compartment];
-//        
-//        // update parameter counter -
-//        parameter_counter++;
-//    }
+    // Last, process transfer block -
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
+    for (NSXMLElement *mass_transfer_term in mass_transfer_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[mass_transfer_term attributeForName:@"from_compartment"] stringValue];
+        
+        // formulate transfer rate law -
+        __unused NSString *mass_transfer_rate_law = [self formulateMassTransferRateParametersForOperation:mass_transfer_term
+                                                                                   inCompartment:operation_compartment
+                                                                                     atRateIndex:&rate_counter
+                                                                               andParameterIndex:&parameter_counter];
+    }
 
+    
     return parameter_counter;
 }
 

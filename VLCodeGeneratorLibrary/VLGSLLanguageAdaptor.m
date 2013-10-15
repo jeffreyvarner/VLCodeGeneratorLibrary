@@ -116,7 +116,7 @@
         }
         
         // add a volume term -
-        [buffer appendFormat:@"\tdouble VOLUME_%@ = gsl_vector_get(pVolume,%lu);\n",compartment_symbol,local_compartment_index++];
+        [buffer appendFormat:@"\tdouble VOLUME_%@ = gsl_vector_get(pVolume,%lu);\n\n",compartment_symbol,local_compartment_index++];
     }
     
     [buffer appendString:@"\n"];
@@ -180,7 +180,7 @@
         }
     }
     
-    // Last, process the clearance block -
+    // Process the clearance block -
     NSArray *basal_clerance_array = [model_tree nodesForXPath:@".//basalClearanceBlock/clearance_term" error:&xpath_error];
     for (NSXMLElement *basal_clearance_term in basal_clerance_array)
     {
@@ -202,9 +202,53 @@
         }
     }
     
+    // Last, process transfer block -
+    NSArray *mass_transfer_array = [model_tree nodesForXPath:@".//massTransferBlock/mass_transfer_term" error:&xpath_error];
+    for (NSXMLElement *mass_transfer_term in mass_transfer_array)
+    {
+        // ok, get some attributes of the operation -
+        NSString *operation_compartment = [[mass_transfer_term attributeForName:@"from_compartment"] stringValue];
+        
+        // formulate transfer rate law -
+        NSString *mass_transfer_rate_law = [self formulateMassTransferRateLawForOperation:mass_transfer_term
+                                                                          fromCompartment:operation_compartment
+                                                                              atRateIndex:&rate_counter
+                                                                        andParameterIndex:&parameter_counter];
+        
+        [buffer appendString:mass_transfer_rate_law];
+    }
+    
     [buffer appendString:@"}\n"];
     
     // return -
+    return [NSString stringWithString:buffer];
+}
+
+-(NSString *)formulateMassTransferRateLawForOperation:(NSXMLElement *)operation
+                                      fromCompartment:(NSString *)compartment
+                                          atRateIndex:(NSUInteger *)rate_index
+                                    andParameterIndex:(NSUInteger *)parameter_index
+{
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    NSString *species = [[operation attributeForName:@"symbol"] stringValue];
+    NSString *to_compartment = [[operation attributeForName:@"to_compartment"] stringValue];
+    NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
+    
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    [buffer appendFormat:@"\t/* Mass transfer term: %@ */\n",species];
+    [buffer appendFormat:@"\t/* Type: %@ */\n",@"FIRST_ORDER"];
+    [buffer appendFormat:@"\t/* From compartment: %@ */\n",compartment];
+    [buffer appendFormat:@"\t/* To compartment: %@ */\n",to_compartment];
+    [buffer appendFormat:@"\t/* index: %lu */\n",*rate_index];
+    [buffer appendString:@"\t/* ---------------------------------------------------------------------------- */\n"];
+    
+    [buffer appendFormat:@"\tdouble k_TRANSFER_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
+    [buffer appendFormat:@"\tdbl_tmp = (k_TRANSFER_%@)*%@*VOLUME_%@;\n",species_symbol,species_symbol,compartment];
+    [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
+    [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
+    [buffer appendString:@"\n"];
+
     return [NSString stringWithString:buffer];
 }
 
@@ -345,7 +389,18 @@
         [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
         [buffer appendString:@"\n"];
     }
-    
+    else if ([operation_type isCaseInsensitiveLike:@"FIRST_ORDER"] == YES)
+    {
+        NSString *species = [[operation attributeForName:@"symbol"] stringValue];
+        NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
+        
+        // alias the parameter value -
+        [buffer appendFormat:@"\tdouble k_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
+        [buffer appendFormat:@"\tdbl_tmp = (k_%@)*%@*VOLUME_%@;\n",species_symbol,species_symbol,compartment];
+        [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
+        [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
+        [buffer appendString:@"\n"];
+    }
     
     
     // return -
