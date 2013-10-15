@@ -388,20 +388,31 @@
         [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
         [buffer appendString:@"\n"];
     }
-    else if ([operation_type isCaseInsensitiveLike:@"First-order"] == YES)
+    else if ([operation_type isCaseInsensitiveLike:@"Mass-Action"] == YES)
     {
         // get the reactants -
         NSError *xpath_error;
         NSArray *reactant_array = [operation nodesForXPath:@".//listOfInputs/species_reference" error:&xpath_error];
         
+        // alias the parameters -
+        [buffer appendFormat:@"\tdouble k_%@_%@ = gsl_vector_get(pV,%lu);\n",operation_name,compartment,(*parameter_index)++];
+        
         // This is first order, so there should be only *one* reactant -
-        NSXMLElement *reactant_node = [reactant_array lastObject];
-        NSString *species = [[reactant_node attributeForName:@"symbol"] stringValue];
-        NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
+        [buffer appendFormat:@"\tdbl_tmp = (k_%@_%@)*VOLUME_%@",operation_name,compartment,compartment];
+        //NSUInteger NUMBER_OF_REACTANTS = [reactant_array count];
+        //NSUInteger reactant_counter = 0;
+        for (NSXMLElement *reactant_node in reactant_array)
+        {
+            NSString *species = [[reactant_node attributeForName:@"symbol"] stringValue];
+            NSString *species_symbol = [NSString stringWithFormat:@"%@_%@",species,compartment];
+            
+            // build the reactant string -
+            [buffer appendFormat:@"*%@",species_symbol];
+        }
+        
         
         // alias the parameter value -
-        [buffer appendFormat:@"\tdouble k_%@_%@ = gsl_vector_get(pV,%lu);\n",species,compartment,(*parameter_index)++];
-        [buffer appendFormat:@"\tdbl_tmp = (k_%@)*%@*VOLUME_%@;\n",species_symbol,species_symbol,compartment];
+        [buffer appendString:@";\n"];
         [buffer appendString:@"\tgsl_vector_set(pRateVector,"];
         [buffer appendFormat:@"%lu,dbl_tmp);\n",(*rate_index)++];
         [buffer appendString:@"\n"];
@@ -971,8 +982,16 @@
     [buffer appendString:@"$(LFLAGS)"];
     NEW_LINE;
     
-    // write the clean target -
+    // write clean target -
     [buffer appendString:@"clean:\n\trm -f "];
+    for (NSString *file_name in file_name_array)
+    {
+        [buffer appendFormat:@"%@.o %@ ",file_name,file_name];
+    }
+    NEW_LINE;
+    
+    // write the all target -
+    [buffer appendString:@"all:\n\trm -f "];
     
     for (NSString *file_name in file_name_array)
     {

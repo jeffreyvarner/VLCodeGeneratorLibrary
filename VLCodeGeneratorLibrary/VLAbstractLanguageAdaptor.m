@@ -104,7 +104,9 @@
     [buffer appendFormat:@"readonly TSTOP=700\n"];
     [buffer appendFormat:@"readonly Ts=0.1\n"];
     [buffer appendString:@"\n"];
-     
+    
+    [buffer appendString:@"\n"];
+    [buffer appendString:@"rm $OUTPUT_FILE\n"];
     [buffer appendString:@"./Driver $OUTPUT_FILE $KINETICS_FILE $IC_FILE $ST_MATRIX $FLOW_MATRIX $VOLUME_FILE $TSTART $TSTOP $Ts\n"];
     
     return [NSString stringWithString:buffer];
@@ -177,7 +179,7 @@
                 }
             }
         }
-        else if ([operation_type isCaseInsensitiveLike:@"First-order"] == YES)
+        else if ([operation_type isCaseInsensitiveLike:@"Mass-action"] == YES)
         {
             [buffer appendFormat:@"%lu k_%@_%@ \n",parameter_counter++,operation_name,operation_compartment];
         }
