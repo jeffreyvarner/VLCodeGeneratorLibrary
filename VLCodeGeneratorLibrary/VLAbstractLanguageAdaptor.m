@@ -631,7 +631,24 @@
             NSArray *look_ahead_reactants = [operation_term nodesForXPath:xpath_reactants error:&xpath_error];
             NSArray *look_ahead_products = [operation_term nodesForXPath:xpath_products error:&xpath_error];
             
-            if ((look_ahead_products!=nil || look_ahead_reactants!=nil) &&
+            // special case - do we have an autocatalytic interaction that is an enzyme?
+            if ((look_ahead_products!=nil && look_ahead_reactants!=nil) &&
+                ([look_ahead_reactants count] == 1 && [look_ahead_products count] == 1))
+            {
+                // this means a particular product is *both* a reactant and a product -
+                // if this reactant is an *enzyme* then we need a 1 (enzyme catalyzes its own generation)
+                NSString *reactant_type = [[look_ahead_reactants lastObject] stringValue];
+                if ([reactant_type isCaseInsensitiveLike:@"enzyme"] == YES)
+                {
+                    // ok, we have a match on a dynamic species -
+                    [buffer appendString:@"1.0 "];
+                }
+                else
+                {
+                    [buffer appendString:@"0.0 "];
+                }
+            }
+            else if ((look_ahead_products!=nil || look_ahead_reactants!=nil) &&
                 ([look_ahead_reactants count]>0 || [look_ahead_products count]>0))
             {
                 // Do we have the species as a reactant?
