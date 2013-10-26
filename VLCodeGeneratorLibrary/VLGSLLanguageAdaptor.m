@@ -93,7 +93,7 @@
     [buffer appendString:@"\t/* initialize -- */\n"];
     [buffer appendString:@"\tdouble dbl_tmp = 0.0;\n"];
     [buffer appendString:@"\n"];
-    [buffer appendString:@"\t/* Get the parameters - */\n"];
+    [buffer appendString:@"\t/* Get the parameters from disk - */\n"];
     [buffer appendString:@"\tstruct VLParameters *parameter_struct = (struct VLParameters *)parameter_object;\n"];
     [buffer appendString:@"\tgsl_vector *pV = parameter_struct->pModelKineticsParameterVector;\n"];
     [buffer appendString:@"\tgsl_vector *pVolume = parameter_struct->pModelVolumeVector;\n"];
