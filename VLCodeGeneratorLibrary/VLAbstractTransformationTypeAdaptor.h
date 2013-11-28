@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
-#import "VLMatlabLanguageAdaptor.h"
+
+@class VLMatlabLanguageAdaptor;
 
 @interface VLAbstractTransformationTypeAdaptor : NSObject
 {

@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
-#import "VLAbstractTransformationTypeAdaptor.h"
 #import "VLTransformationServiceVendor.h"
 
+@class VLAbstractTransformationTypeAdaptor;
 @class VLGSLLanguageAdaptor;
 
 typedef void (^VLCodeGeneratorLibraryJobDidCompleteBlock)(BOOL);
