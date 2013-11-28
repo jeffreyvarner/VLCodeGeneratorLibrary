@@ -17,6 +17,7 @@
 
 // properties -
 @property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
+@property (strong) NSString *myTransformationName;
 
 // lifecycle
 -(void)cleanMyMemory;
@@ -59,6 +60,9 @@
 
 // debug methods -
 -(NSString *)generateModelDebugBufferWithOptions:(NSDictionary *)options;
+
+// file conversion methods
+-(NSString *)generateSBMLFileFromVFFWithOptions:(NSDictionary *)options;
 
 // logic method
 -(NSString *)processTransformationSelector:(SEL)selector withOptions:(NSDictionary *)options;

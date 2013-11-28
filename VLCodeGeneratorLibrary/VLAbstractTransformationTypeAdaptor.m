@@ -20,6 +20,7 @@
 {
     // kia my iVars -
     self.myLanguageAdaptor = nil;
+    self.myTransformationName = nil;
 }
 
 #pragma mark - routing method
@@ -77,6 +78,14 @@
 }
 
 #pragma mark - transformation methods
+-(NSString *)generateSBMLFileFromVFFWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
+
+
 -(NSString *)generateModelDataStructureBufferWithOptions:(NSDictionary *)options
 {
     // force the user to overide -

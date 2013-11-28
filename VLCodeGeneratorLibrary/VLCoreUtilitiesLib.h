@@ -17,6 +17,8 @@
 // low level methods -
 +(NSXMLDocument *)createXMLDocumentFromFile:(NSURL *)url;
 +(NSXMLDocument *)createXMLDocumentFromSNLFile:(NSURL *)url;
++(NSXMLDocument *)createXMLDocumentFromVFFFile:(NSURL *)url;
+
 +(NSArray *)executeXPathQuery:(NSString *)xpath withXMLTree:(NSXMLDocument *)document;
 +(void)writeBuffer:(NSString *)buffer
              toURL:(NSURL *)fileURL;

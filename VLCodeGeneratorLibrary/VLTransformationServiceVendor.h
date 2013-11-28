@@ -16,7 +16,7 @@
     @protected
     NSXMLDocument *_myBlueprintTree;
     NSString *_myTransformationName;
-    NSXMLDocument *_myVendorSelectorTree;
+    NSXMLDocument *_myCodeGenerationConfigurationTree;
     
     VLAbstractLanguageAdaptor *_myLanguageAdaptor;
     VLAbstractTransformationTypeAdaptor *_myTransformationAdaptor;
@@ -26,13 +26,17 @@
 // Properties -
 @property (retain) NSXMLDocument *myBlueprintTree;
 @property (retain) NSString *myTransformationName;
-@property (strong) NSXMLDocument *myVendorSelectorTree;
-@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
-@property (strong) VLAbstractTransformationTypeAdaptor *myTransformationAdaptor;
+@property (strong) NSXMLDocument *myCodeGenerationConfigurationTree;
 
 // Methods
 -(void)cleanMyMemory;
--(void)startTransformationWithName:(NSString *)transformationName forModelTree:(NSXMLDocument *)modelTree;
+-(void)startTransformationWithNode:(NSXMLElement *)transformationNode
+                           nameKey:(NSString *)transformationName
+                           typeKey:(NSString *)type_key
+                       languageKey:(NSString *)language_key
+                         vendorKey:(NSString *)vendorKey
+                      forModelTree:(NSXMLDocument *)modelTree;
+
 -(void)stopTransformation;
 -(void)postMessageTransformationMessage:(NSString *)message;
 

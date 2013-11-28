@@ -76,6 +76,13 @@
     return @"u_need_2_override_me";
 }
 
+#pragma mark - file conversion methods
+-(NSString *)generateSBMLFileFromVFFWithOptions:(NSDictionary *)options
+{
+    // force the user to overide -
+    [self doesNotRecognizeSelector:_cmd];
+    return @"u_need_2_override_me";
+}
 
 #pragma mark - language agnostic generation methods
 -(NSString *)generateModelSolveModelScriptBufferWithOptions:(NSDictionary *)options

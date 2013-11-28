@@ -11,16 +11,13 @@
 
 @interface VLTransformationServiceVendor ()
 
+@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
+@property (strong) VLAbstractTransformationTypeAdaptor *myTransformationAdaptor;
 
 @end
 
 @implementation VLTransformationServiceVendor
 
-// synthesize
-@synthesize myBlueprintTree = _myBlueprintTree;
-@synthesize myTransformationName = _myTransformationName;
-@synthesize myLanguageAdaptor = _myLanguageAdaptor;
-@synthesize myTransformationAdaptor = _myTransformationAdaptor;
 
 -(void)dealloc
 {
@@ -31,13 +28,13 @@
 {
     self.myBlueprintTree = nil;
     self.myTransformationName = nil;
-    self.myLanguageAdaptor = nil;
-    self.myVendorSelectorTree = nil;
-    self.myTransformationAdaptor = nil;
+    self.myCodeGenerationConfigurationTree = nil;
 }
 
 -(void)postMessageTransformationMessage:(NSString *)message
 {
+    NSLog(@"message: %@",message);
+    
     // dispatch -
     dispatch_async(dispatch_get_main_queue(), ^{
         
@@ -50,8 +47,23 @@
 }
 
 #pragma mark - override these methods in subclass
--(void)startTransformationWithName:(NSString *)transformationName forModelTree:(NSXMLDocument *)modelTree
+-(void)startTransformationWithNode:(NSXMLElement *)transformationNode
+                           nameKey:(NSString *)transformationName
+                           typeKey:(NSString *)type_key
+                       languageKey:(NSString *)language_key
+                         vendorKey:(NSString *)vendorKey
+                      forModelTree:(NSXMLDocument *)modelTree;
 {
+    
+    // do have the myCodeGenerationConfigurationTree?
+    if ([self myCodeGenerationConfigurationTree] == nil)
+    {
+        // print message to console -
+        NSString *message = [NSString stringWithFormat:@"ERROR: Missing or incorrect vendor_key requested for %@",transformationName];
+        [self postMessageTransformationMessage:message];
+        return;
+    }
+    
     // grab the name (before we start) -
     self.myTransformationName = transformationName;
     
@@ -82,50 +94,51 @@
             kXMLTransformationTree : myBlueprintDocument
         };
         
-        // ok, do we have a selector tree?
-        if ([weak_self myVendorSelectorTree]!=nil)
+        // First, we need to lookup the language and transformation adaptors -
+        NSString *xpath_transformation = [NSString stringWithFormat:@".//TransformationMap/transform_type[@transformation_key='%@']/@transform_adaptor",type_key];
+        NSString *transformation_adaptor_class_string = [[[[self myCodeGenerationConfigurationTree] nodesForXPath:xpath_transformation error:nil] lastObject] stringValue];
+        
+        NSString *xpath_language = [NSString stringWithFormat:@".//LanguageMap/language_type[@language_key='%@']/@language_adaptor",language_key];
+        NSString *language_adaptor_class_string = [[[[self myCodeGenerationConfigurationTree] nodesForXPath:xpath_language error:nil] lastObject] stringValue];
+        
+        //Next, build the language and type adaptors -
+        weak_self.myLanguageAdaptor = [[NSClassFromString(language_adaptor_class_string) alloc] init];
+        weak_self.myTransformationAdaptor = [[NSClassFromString(transformation_adaptor_class_string) alloc] init];
+        
+        // lookup the selector using vendor_key in myVendorSelector tree -
+        NSError *xpath_error;
+        NSString *selector_xpath_string = [NSString stringWithFormat:@".//record[@vendor_key='%@']/@selector",vendorKey];
+        NSArray *selector_array = [[weak_self myCodeGenerationConfigurationTree] nodesForXPath:selector_xpath_string error:&xpath_error];
+        
+        NSString *selector_string = @"generateSBMLFileFromVFFWithOptions:";
+        NSLog(@"Monkey ...%@",selector_string);
+        if (selector_string!=nil)
         {
-            // Get the vendor_key for this transformation -
-            NSError *xpath_error;
-            NSString *xpath = [NSString stringWithFormat:@".//Transformation[@name='%@']/@vendor_key",transformationName];
-            NSString *vendor_key = [[[[self myBlueprintTree] nodesForXPath:xpath error:&xpath_error] lastObject] stringValue];
+            // get the selector -
+            SEL code_transformation_selector = NSSelectorFromString(selector_string);
             
-            // lookup the vendor key in myVendorSelector tree -
-            NSString *selector_xpath_string = [NSString stringWithFormat:@".//record[@vendor_key='%@']/@selector",vendor_key];
-            NSString *selector_string = [[[[weak_self myVendorSelectorTree] nodesForXPath:selector_xpath_string error:&xpath_error] lastObject] stringValue];
-            if (selector_string!=nil)
+            // does the language adaptor have this selector?
+            if ([[weak_self myTransformationAdaptor] respondsToSelector:code_transformation_selector] == YES)
             {
-                // get the selector -
-                SEL code_transformation_selector = NSSelectorFromString(selector_string);
+                // ok, so we need to set the language adaptor reference *on* my transformation adaptor
+                // so we know what language to generate the code in
+                [[weak_self myTransformationAdaptor] setMyLanguageAdaptor:[self myLanguageAdaptor]];
+                [[weak_self myTransformationAdaptor] setMyTransformationName:transformationName];
                 
-                // does the language adaptor have this selector?
-                if ([[weak_self myTransformationAdaptor] respondsToSelector:code_transformation_selector] == YES)
-                {
-                    // ok, so we need to set the language adaptor reference *on* my transformation adaptor
-                    // so we know what language to generate the code in
-                    [[weak_self myTransformationAdaptor] setMyLanguageAdaptor:[self myLanguageAdaptor]];
-                    
-                    //specify the function pointer
-                    typedef NSString* (*methodPtr)(id, SEL,NSDictionary*);
-                    
-                    //get the actual method
-                    methodPtr command = (methodPtr)[[weak_self myTransformationAdaptor] methodForSelector:code_transformation_selector];
-                    
-                    //run the method
-                    NSString *code_block = command([weak_self myTransformationAdaptor],code_transformation_selector,options);
-                    [buffer appendString:code_block];
-                }
-                else
-                {
-                    // print message to console -
-                    NSString *message = [NSString stringWithFormat:@"ERROR: Missing or incorrect selector requested for %@",transformationName];
-                    [weak_self postMessageTransformationMessage:message];
-                }
+                //specify the function pointer
+                typedef NSString* (*methodPtr)(id, SEL,NSDictionary*);
+                
+                //get the actual method
+                methodPtr command = (methodPtr)[[weak_self myTransformationAdaptor] methodForSelector:code_transformation_selector];
+                
+                //run the method
+                NSString *code_block = command([weak_self myTransformationAdaptor],code_transformation_selector,options);
+                [buffer appendString:code_block];
             }
             else
             {
                 // print message to console -
-                NSString *message = [NSString stringWithFormat:@"ERROR: Missing or incorrect vendor_key requested for %@",transformationName];
+                NSString *message = [NSString stringWithFormat:@"ERROR: Missing or incorrect selector requested for %@",transformationName];
                 [weak_self postMessageTransformationMessage:message];
             }
         }

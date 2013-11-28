@@ -114,6 +114,70 @@
     }
 }
 
++(NSXMLDocument *)createXMLDocumentFromVFFFile:(NSURL *)fileURL
+{
+    // Make sure we have a URL -
+    if (fileURL==nil)
+    {
+        NSLog(@"ERROR: Blueprint file URL is nil.");
+        return nil;
+    }
+    
+    // Create a tmp buffer -
+    NSMutableString *xml_buffer = [NSMutableString string];
+    [xml_buffer appendString:@"<?xml version=\"1.0\" standalone=\"yes\"?>\n"];
+    [xml_buffer appendString:@"<VFFModel>\n"];
+    [xml_buffer appendString:@"\n"];
+    
+    // Create error instance -
+	NSError *error = nil;
+    
+    // Load the file -
+    NSString *fileString = [NSString stringWithContentsOfURL:fileURL encoding:NSUTF8StringEncoding error:&error];
+    
+    // Ok, we need to walk through this file, and put it an array -
+    NSScanner *scanner = [NSScanner scannerWithString:fileString];
+    while (![scanner isAtEnd])
+    {
+        // Ok, let'd grab a row -
+        NSString *record_string;
+        [scanner scanUpToString:@"\n" intoString:&record_string];
+        
+        // Skip comments -
+        
+        NSRange range = [record_string rangeOfString:@"//" options:NSCaseInsensitiveSearch];
+        if(range.location == NSNotFound)
+        {
+            [xml_buffer appendString:@"\t<reaction_record data='"];
+            [xml_buffer appendFormat:@"%@'/>\n",record_string];
+        }
+        else
+        {
+            [xml_buffer appendString:@"\t<comment_record data='"];
+            [xml_buffer appendFormat:@"%@'/>\n",record_string];
+        }
+    }
+
+    // close -
+    [xml_buffer appendString:@"\n"];
+    [xml_buffer appendString:@"</VFFModel>\n"];
+    
+    // create document from buffer -
+    NSXMLDocument *document = [[NSXMLDocument alloc] initWithXMLString:xml_buffer options:NSXMLNodePrettyPrint error:&error];
+    
+    // Check to make sure all is ok -
+    if (error==nil)
+    {
+        // return -
+        return document;
+    }
+    else
+    {
+        NSLog(@"ERROR in createXMLDocumentFromSNLFile: = %@",[error description]);
+        return nil;
+    }
+}
+
 +(NSString *)generateUUIDString
 {
     // create a new UUID
