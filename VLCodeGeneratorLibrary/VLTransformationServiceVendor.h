@@ -8,7 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
-#import "VLAbstractTransformationTypeAdaptor.h"
+
+@class VLAbstractTransformationTypeAdaptor;
 
 @interface VLTransformationServiceVendor : NSObject
 {

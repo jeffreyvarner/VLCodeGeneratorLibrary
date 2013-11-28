@@ -22,6 +22,60 @@
     self.myLanguageAdaptor = nil;
 }
 
+#pragma mark - routing method
+-(NSString *)processTransformationSelector:(SEL)selector withOptions:(NSDictionary *)options
+{
+    // initialize the buffer -
+    NSMutableString *buffer = [[NSMutableString alloc] init];
+    
+    // check, do we have a specific language adaptor?
+    if ([self myLanguageAdaptor] == nil)
+    {
+        // no languagae adaptor. Make Matlab the default
+        self.myLanguageAdaptor = [[VLMatlabLanguageAdaptor alloc] init];
+    }
+    
+    // ok, so what tree type do we have?
+    NSXMLDocument *transformation_tree = [options objectForKey:kXMLTransformationTree];
+    NSString *xpath = @"//listOfGlobalTransformationProperties/property[@key='MODEL_TREE_TYPE']/@value";
+    NSString *model_type = [[[transformation_tree nodesForXPath:xpath error:nil] lastObject] stringValue];
+    if ([model_type isCaseInsensitiveLike:@"SBML"] == YES)
+    {
+        [[self myLanguageAdaptor] setMyModelTreeType:VLAbstractLanguageAdaptorModelTreeTypeSBML];
+    }
+    else if ([model_type isCaseInsensitiveLike:@"CCML"] == YES)
+    {
+        [[self myLanguageAdaptor] setMyModelTreeType:VLAbstractLanguageAdaptorModelTreeTypeCCML];
+    }
+    else if ([model_type isCaseInsensitiveLike:@"PBPKML"] == YES)
+    {
+        [[self myLanguageAdaptor] setMyModelTreeType:VLAbstractLanguageAdaptorModelTreeTypePBPKML];
+    }
+    
+    // ok, let's create a method pointer -
+    if ([[self myLanguageAdaptor] respondsToSelector:selector] == YES)
+    {
+        //specify the function pointer
+        typedef NSString* (*method_pointer)(id,SEL,NSDictionary*);
+        
+        // get the actual method -
+        method_pointer command = (method_pointer)[[self myLanguageAdaptor] methodForSelector:selector];
+        
+        // run the method
+        NSString *code_block = command([self myLanguageAdaptor],selector,options);
+        [buffer appendString:code_block];
+    }
+    else
+    {
+        // ooops ...
+        // Our language adaptor doesn't run this command. Send an error message -
+        // ...
+    }
+    
+    // return -
+    return buffer;
+}
+
 #pragma mark - transformation methods
 -(NSString *)generateModelDataStructureBufferWithOptions:(NSDictionary *)options
 {

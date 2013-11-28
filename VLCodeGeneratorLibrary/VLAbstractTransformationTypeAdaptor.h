@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
+#import "VLMatlabLanguageAdaptor.h"
 
 @interface VLAbstractTransformationTypeAdaptor : NSObject
 {
@@ -58,6 +59,9 @@
 
 // debug methods -
 -(NSString *)generateModelDebugBufferWithOptions:(NSDictionary *)options;
+
+// logic method
+-(NSString *)processTransformationSelector:(SEL)selector withOptions:(NSDictionary *)options;
 
 
 @end

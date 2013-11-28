@@ -7,6 +7,7 @@
 //
 
 #import "VLTransformationServiceVendor.h"
+#import "VLAbstractTransformationTypeAdaptor.h"
 
 @interface VLTransformationServiceVendor ()
 

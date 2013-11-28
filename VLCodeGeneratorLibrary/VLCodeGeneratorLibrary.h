@@ -20,6 +20,9 @@ typedef void (^VLCodeGeneratorLibraryJobDidCompleteBlock)(BOOL);
     @private
     NSXMLDocument *_myTransformationBlueprintTree;
     NSXMLDocument *_myModelSpecificationTree;
+    NSXMLDocument *_myCodeGeneratorConfigurationTree;
+    
+    
     NSString *_myTransformationFilePath;
     NSString *_myTransformationLanguageAdaptor;
     NSString *_myTransformationTypeAdaptor;
@@ -27,6 +30,8 @@ typedef void (^VLCodeGeneratorLibraryJobDidCompleteBlock)(BOOL);
 
 // properties -
 @property (strong) NSXMLDocument *myTransformationBlueprintTree;
+@property (strong) NSXMLDocument *myCodeGeneratorConfigurationTree;
+
 @property (strong) NSString *myTransformationFilePath;
 @property (strong) NSString *myTransformationLanguageAdaptor;
 @property (strong) NSString *myTransformationTypeAdaptor;

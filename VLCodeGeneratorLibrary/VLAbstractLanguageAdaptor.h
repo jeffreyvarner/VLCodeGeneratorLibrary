@@ -9,10 +9,20 @@
 #import <Foundation/Foundation.h>
 #import "VLPBPKModelPhysicalParameterCalculator.h"
 
+typedef NS_ENUM(NSUInteger,VLAbstractLanguageAdaptorModelTreeType)
+{
+    VLAbstractLanguageAdaptorModelTreeTypeSBML,
+    VLAbstractLanguageAdaptorModelTreeTypeCCML,
+    VLAbstractLanguageAdaptorModelTreeTypeCGML,
+    VLAbstractLanguageAdaptorModelTreeTypePBPKML
+};
+
 @interface VLAbstractLanguageAdaptor : NSObject
 {
     
 }
+
+@property (assign) VLAbstractLanguageAdaptorModelTreeType myModelTreeType;
 
 // general methods for all model types -
 -(NSString *)generateModelDataStructureBufferWithOptions:(NSDictionary *)options;
