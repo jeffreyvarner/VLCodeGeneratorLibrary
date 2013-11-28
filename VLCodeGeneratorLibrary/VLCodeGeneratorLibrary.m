@@ -108,12 +108,15 @@
             
             // Setup transformation vendor -
             // First, build the language adaptor -
-            NSString *class_string = self.myTransformationLanguageAdaptor;
-            VLAbstractLanguageAdaptor *language_adaptor = [[NSClassFromString(class_string) alloc] init];
+            NSString *language_adaptor_class_string = self.myTransformationLanguageAdaptor;
+            NSString *transformation_adaptor_class_string = self.myTransformationTypeAdaptor;
+            VLAbstractLanguageAdaptor *language_adaptor = [[NSClassFromString(language_adaptor_class_string) alloc] init];
+            VLAbstractTransformationTypeAdaptor *transformation_adaptor = [[NSClassFromString(transformation_adaptor_class_string) alloc] init];
             
             // Second, build the transformation service vendor, set some props -
             VLTransformationServiceVendor *transformation_service_vendor = [[VLTransformationServiceVendor alloc] init];
             [transformation_service_vendor setMyLanguageAdaptor:language_adaptor];
+            [transformation_service_vendor setMyTransformationAdaptor:transformation_adaptor];
             [transformation_service_vendor setMyTransformationName:transformationName];
             [transformation_service_vendor setMyBlueprintTree:[self myTransformationBlueprintTree]];
             [transformation_service_vendor setMyVendorSelectorTree:selector_document];
@@ -155,6 +158,7 @@
     self.myTransformationBlueprintTree = nil;
     self.myTransformationFilePath = nil;
     self.myTransformationLanguageAdaptor = nil;
+    self.myTransformationTypeAdaptor = nil;
 }
 
 

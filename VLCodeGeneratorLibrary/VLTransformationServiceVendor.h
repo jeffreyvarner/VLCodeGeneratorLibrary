@@ -8,21 +8,26 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
+#import "VLAbstractTransformationTypeAdaptor.h"
 
 @interface VLTransformationServiceVendor : NSObject
 {
     @protected
     NSXMLDocument *_myBlueprintTree;
     NSString *_myTransformationName;
-    VLAbstractLanguageAdaptor *_myLanguageAdaptor;
     NSXMLDocument *_myVendorSelectorTree;
+    
+    VLAbstractLanguageAdaptor *_myLanguageAdaptor;
+    VLAbstractTransformationTypeAdaptor *_myTransformationAdaptor;
+    
 }
 
 // Properties -
 @property (retain) NSXMLDocument *myBlueprintTree;
 @property (retain) NSString *myTransformationName;
-@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
 @property (strong) NSXMLDocument *myVendorSelectorTree;
+@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
+@property (strong) VLAbstractTransformationTypeAdaptor *myTransformationAdaptor;
 
 // Methods
 -(void)cleanMyMemory;

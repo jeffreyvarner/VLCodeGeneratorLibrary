@@ -1,18 +1,24 @@
 //
-//  VLAbstractLanguageAdaptor.h
-//  CFLGenerator
+//  VLAbstractTransformationTypeAdaptor.h
+//  VLCodeGeneratorLibrary
 //
-//  Created by Jeffrey Varner on 5/7/13.
+//  Created by Jeffrey Varner on 11/27/13.
 //  Copyright (c) 2013 Varnerlab. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import "VLPBPKModelPhysicalParameterCalculator.h"
+#import "VLAbstractLanguageAdaptor.h"
 
-@interface VLAbstractLanguageAdaptor : NSObject
+@interface VLAbstractTransformationTypeAdaptor : NSObject
 {
     
 }
+
+// properties -
+@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
+
+// lifecycle
+-(void)cleanMyMemory;
 
 // general methods for all model types -
 -(NSString *)generateModelDataStructureBufferWithOptions:(NSDictionary *)options;

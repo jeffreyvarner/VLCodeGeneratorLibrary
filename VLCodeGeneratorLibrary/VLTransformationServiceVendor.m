@@ -19,6 +19,7 @@
 @synthesize myBlueprintTree = _myBlueprintTree;
 @synthesize myTransformationName = _myTransformationName;
 @synthesize myLanguageAdaptor = _myLanguageAdaptor;
+@synthesize myTransformationAdaptor = _myTransformationAdaptor;
 
 -(void)dealloc
 {
@@ -31,6 +32,7 @@
     self.myTransformationName = nil;
     self.myLanguageAdaptor = nil;
     self.myVendorSelectorTree = nil;
+    self.myTransformationAdaptor = nil;
 }
 
 -(void)postMessageTransformationMessage:(NSString *)message
@@ -96,16 +98,20 @@
                 SEL code_transformation_selector = NSSelectorFromString(selector_string);
                 
                 // does the language adaptor have this selector?
-                if ([[weak_self myLanguageAdaptor] respondsToSelector:code_transformation_selector] == YES)
+                if ([[weak_self myTransformationAdaptor] respondsToSelector:code_transformation_selector] == YES)
                 {
+                    // ok, so we need to set the language adaptor reference *on* my transformation adaptor
+                    // so we know what language to generate the code in
+                    [[weak_self myTransformationAdaptor] setMyLanguageAdaptor:[self myLanguageAdaptor]];
+                    
                     //specify the function pointer
                     typedef NSString* (*methodPtr)(id, SEL,NSDictionary*);
                     
                     //get the actual method
-                    methodPtr command = (methodPtr)[[weak_self myLanguageAdaptor] methodForSelector:code_transformation_selector];
+                    methodPtr command = (methodPtr)[[weak_self myTransformationAdaptor] methodForSelector:code_transformation_selector];
                     
                     //run the method
-                    NSString *code_block = command([weak_self myLanguageAdaptor],code_transformation_selector,options);
+                    NSString *code_block = command([weak_self myTransformationAdaptor],code_transformation_selector,options);
                     [buffer appendString:code_block];
                 }
                 else

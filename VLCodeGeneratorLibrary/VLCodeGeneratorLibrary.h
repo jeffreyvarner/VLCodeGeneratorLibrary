@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "VLAbstractLanguageAdaptor.h"
+#import "VLAbstractTransformationTypeAdaptor.h"
 #import "VLTransformationServiceVendor.h"
 
 @class VLGSLLanguageAdaptor;
@@ -21,12 +22,14 @@ typedef void (^VLCodeGeneratorLibraryJobDidCompleteBlock)(BOOL);
     NSXMLDocument *_myModelSpecificationTree;
     NSString *_myTransformationFilePath;
     NSString *_myTransformationLanguageAdaptor;
+    NSString *_myTransformationTypeAdaptor;
 }
 
 // properties -
 @property (strong) NSXMLDocument *myTransformationBlueprintTree;
 @property (strong) NSString *myTransformationFilePath;
 @property (strong) NSString *myTransformationLanguageAdaptor;
+@property (strong) NSString *myTransformationTypeAdaptor;
 
 
 
