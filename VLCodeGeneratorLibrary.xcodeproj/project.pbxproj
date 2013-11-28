@@ -31,14 +31,14 @@
 		AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBC517FC763D00A4E49F /* VLCoreUtilitiesLib.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBA17FC762400A4E49F /* VLCodeGenerationFoundationServer.h */; };
 		AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBBC17FC762400A4E49F /* VLCodeGenerationOperation.h */; };
-		AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; };
+		AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB517FC75E900A4E49F /* VLAbstractLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FBB017FC75BF00A4E49F /* VLTransformationServiceVendor.h */; };
 		AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */ = {isa = PBXBuildFile; fileRef = AD09FB9117FC755100A4E49F /* VLCodeGeneratorLibrary.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = AD543CB217FDCC560084CF8A /* VLGSLLanguageAdaptor.h */; };
 		AD543CB517FDCC560084CF8A /* VLGSLLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = AD543CB317FDCC560084CF8A /* VLGSLLanguageAdaptor.m */; };
 		AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */ = {isa = PBXBuildFile; fileRef = AD99741A18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h */; };
 		AD99741D18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m in Sources */ = {isa = PBXBuildFile; fileRef = AD99741B18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.m */; };
-		ADAE511A1846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51181846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h */; };
+		ADAE511A1846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51181846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ADAE511B1846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE51191846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.m */; };
 		ADAE511F1846D39500A291AB /* VLCellFreeModelTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE511D1846D39500A291AB /* VLCellFreeModelTransformationTypeAdaptor.h */; };
 		ADAE51201846D39500A291AB /* VLCellFreeModelTransformationTypeAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE511E1846D39500A291AB /* VLCellFreeModelTransformationTypeAdaptor.m */; };
@@ -54,9 +54,9 @@
 		ADAE513B1847682B00A291AB /* VLSundialsLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE51391847682B00A291AB /* VLSundialsLanguageAdaptor.m */; };
 		ADAE513F18476D7400A291AB /* VLPBPKModelTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE513D18476D7400A291AB /* VLPBPKModelTransformationTypeAdaptor.h */; };
 		ADAE514018476D7400A291AB /* VLPBPKModelTransformationTypeAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE513E18476D7400A291AB /* VLPBPKModelTransformationTypeAdaptor.m */; };
-		ADAE51441847ADFB00A291AB /* VLSMBLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51421847ADFB00A291AB /* VLSMBLLanguageAdaptor.h */; };
+		ADAE51441847ADFB00A291AB /* VLSMBLLanguageAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51421847ADFB00A291AB /* VLSMBLLanguageAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ADAE51451847ADFB00A291AB /* VLSMBLLanguageAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE51431847ADFB00A291AB /* VLSMBLLanguageAdaptor.m */; };
-		ADAE51491847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51471847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h */; };
+		ADAE51491847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h in Headers */ = {isa = PBXBuildFile; fileRef = ADAE51471847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		ADAE514A1847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.m in Sources */ = {isa = PBXBuildFile; fileRef = ADAE51481847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.m */; };
 /* End PBXBuildFile section */
 
@@ -385,21 +385,21 @@
 				AD09FBEB17FCBC7600A4E49F /* VLBlocksAndConstanStrings.h in Headers */,
 				AD09FBEC17FCBC7600A4E49F /* VLCoreUtilitiesLib.h in Headers */,
 				AD09FBF217FCBC7600A4E49F /* VLCodeGeneratorLibrary.h in Headers */,
+				ADAE51441847ADFB00A291AB /* VLSMBLLanguageAdaptor.h in Headers */,
 				AD09FBF017FCBC7600A4E49F /* VLAbstractLanguageAdaptor.h in Headers */,
+				ADAE511A1846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h in Headers */,
+				ADAE51491847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h in Headers */,
 				AD09FBF117FCBC7600A4E49F /* VLTransformationServiceVendor.h in Headers */,
 				ADAE5131184767EE00A291AB /* VLOctaveMLanguageAdaptor.h in Headers */,
-				ADAE511A1846D2D500A291AB /* VLAbstractTransformationTypeAdaptor.h in Headers */,
 				ADAE513A1847682B00A291AB /* VLSundialsLanguageAdaptor.h in Headers */,
 				ADAE51231846D40F00A291AB /* VLMassActionModelTransformationTypeAdaptor.h in Headers */,
 				ADAE513F18476D7400A291AB /* VLPBPKModelTransformationTypeAdaptor.h in Headers */,
 				ADAE511F1846D39500A291AB /* VLCellFreeModelTransformationTypeAdaptor.h in Headers */,
 				AD09FBEE17FCBC7600A4E49F /* VLCodeGenerationOperation.h in Headers */,
 				AD09FBED17FCBC7600A4E49F /* VLCodeGenerationFoundationServer.h in Headers */,
-				ADAE51441847ADFB00A291AB /* VLSMBLLanguageAdaptor.h in Headers */,
 				AD99741C18034B1E008A4199 /* VLPBPKModelPhysicalParameterCalculator.h in Headers */,
 				ADAE51351847680900A291AB /* VLOctaveCLanguageAdaptor.h in Headers */,
 				ADAE51291846DB5000A291AB /* VLMatlabLanguageAdaptor.h in Headers */,
-				ADAE51491847AEEC00A291AB /* VLFileFormatTransformationTypeAdaptor.h in Headers */,
 				AD543CB417FDCC560084CF8A /* VLGSLLanguageAdaptor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -625,6 +625,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VLCodeGeneratorLibrary/VLCodeGeneratorLibrary-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
 				PRIVATE_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PUBLIC_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
@@ -636,6 +637,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VLCodeGeneratorLibrary/VLCodeGeneratorLibrary-Prefix.pch";
+				OTHER_LDFLAGS = "-ObjC";
 				PRIVATE_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PUBLIC_HEADERS_FOLDER_PATH = "include/${PRODUCT_NAME}";

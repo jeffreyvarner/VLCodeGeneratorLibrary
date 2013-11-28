@@ -7,11 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "VLAbstractLanguageAdaptor.h"
 #import "VLTransformationServiceVendor.h"
 
-@class VLAbstractTransformationTypeAdaptor;
-@class VLGSLLanguageAdaptor;
+@class VLFileFormatTransformationTypeAdaptor;
+@class VLSMBLLanguageAdaptor;
 
 typedef void (^VLCodeGeneratorLibraryJobDidCompleteBlock)(BOOL);
 

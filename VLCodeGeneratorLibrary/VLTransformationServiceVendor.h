@@ -35,6 +35,8 @@
                            typeKey:(NSString *)type_key
                        languageKey:(NSString *)language_key
                          vendorKey:(NSString *)vendorKey
+                   languageAdaptor:(VLAbstractLanguageAdaptor *)languageAdaptor
+             transformationAdaptor:(VLAbstractTransformationTypeAdaptor *)transformationAdaptor
                       forModelTree:(NSXMLDocument *)modelTree;
 
 -(void)stopTransformation;

@@ -7,7 +7,12 @@
 //
 
 #import "VLCodeGeneratorLibrary.h"
-#import "VLGSLLanguageAdaptor.h"
+#import "VLFileFormatTransformationTypeAdaptor.h"
+#import "VLAbstractTransformationTypeAdaptor.h"
+
+#import "VLFileFormatTransformationTypeAdaptor.h"
+#import "VLSMBLLanguageAdaptor.h"
+
 
 @interface VLCodeGeneratorLibrary ()
 
@@ -99,7 +104,7 @@
             if ([local_file_type isCaseInsensitiveLike:@"VFF"] == YES)
             {
                 NSError *error;
-                NSString *xpath_model_name = @".//property[@key='MODEL_FILE_NAME']/@value";
+                NSString *xpath_model_name = @"./property[@key='INPUT_FILE_NAME']/@value";
                 NSString *myModelFileName = [[[transformation_node nodesForXPath:xpath_model_name error:&error] lastObject] stringValue];
                 NSString *path_to_model_file = [NSString stringWithFormat:@"%@%@",myInputFilePath,myModelFileName];
                 
@@ -138,12 +143,33 @@
         [transformation_service_vendor setMyBlueprintTree:[self myTransformationBlueprintTree]];
         [transformation_service_vendor setMyCodeGenerationConfigurationTree:[self myCodeGeneratorConfigurationTree]];
         
+        // Get the selector -
+        // lookup the selector using vendor_key in myVendorSelector tree -
+        NSError *xpath_error;
+        NSString *selector_xpath_string = [NSString stringWithFormat:@".//record[@vendor_key='%@']/@selector",vendor_key];
+        NSArray *selector_array = [[self myCodeGeneratorConfigurationTree] nodesForXPath:selector_xpath_string error:&xpath_error];
+        NSString *selector_string = [[selector_array lastObject] stringValue];
+        
+        // First, we need to lookup the language and transformation adaptors -
+        NSString *xpath_transformation = [NSString stringWithFormat:@".//TransformationMap/transform_type[@transformation_key='%@']/@transform_adaptor",type_key];
+        NSString *transformation_adaptor_class_string = [[[[self myCodeGeneratorConfigurationTree] nodesForXPath:xpath_transformation error:nil] lastObject] stringValue];
+        
+        NSString *xpath_language = [NSString stringWithFormat:@".//LanguageMap/language_type[@language_key='%@']/@language_adaptor",language_key];
+        NSString *language_adaptor_class_string = [[[[self myCodeGeneratorConfigurationTree] nodesForXPath:xpath_language error:nil] lastObject] stringValue];
+        
+        //Next, build the language and type adaptors -
+        //Class my_language_adaptor_class = NSClassFromString(language_adaptor_class_string);
+        VLAbstractLanguageAdaptor *language_adaptor = [[VLSMBLLanguageAdaptor alloc] init];
+        VLAbstractTransformationTypeAdaptor *transformation_adaptor = [[VLFileFormatTransformationTypeAdaptor alloc] init];
+        
         // Last, execute -
         [transformation_service_vendor startTransformationWithNode:transformation_node
                                                            nameKey:transformationName
                                                            typeKey:type_key
                                                        languageKey:language_key
-                                                         vendorKey:vendor_key
+                                                         vendorKey:selector_string
+                                                   languageAdaptor:language_adaptor
+                                             transformationAdaptor:transformation_adaptor
                                                       forModelTree:model_tree];
         
         // prepare message -

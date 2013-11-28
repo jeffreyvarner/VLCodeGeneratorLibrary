@@ -52,7 +52,9 @@
                            typeKey:(NSString *)type_key
                        languageKey:(NSString *)language_key
                          vendorKey:(NSString *)vendorKey
-                      forModelTree:(NSXMLDocument *)modelTree;
+                   languageAdaptor:(VLAbstractLanguageAdaptor *)languageAdaptor
+             transformationAdaptor:(VLAbstractTransformationTypeAdaptor *)transformationAdaptor
+                      forModelTree:(NSXMLDocument *)modelTree
 {
     
     // do have the myCodeGenerationConfigurationTree?
@@ -94,45 +96,28 @@
             kXMLTransformationTree : myBlueprintDocument
         };
         
-        // First, we need to lookup the language and transformation adaptors -
-        NSString *xpath_transformation = [NSString stringWithFormat:@".//TransformationMap/transform_type[@transformation_key='%@']/@transform_adaptor",type_key];
-        NSString *transformation_adaptor_class_string = [[[[self myCodeGenerationConfigurationTree] nodesForXPath:xpath_transformation error:nil] lastObject] stringValue];
         
-        NSString *xpath_language = [NSString stringWithFormat:@".//LanguageMap/language_type[@language_key='%@']/@language_adaptor",language_key];
-        NSString *language_adaptor_class_string = [[[[self myCodeGenerationConfigurationTree] nodesForXPath:xpath_language error:nil] lastObject] stringValue];
-        
-        //Next, build the language and type adaptors -
-        weak_self.myLanguageAdaptor = [[NSClassFromString(language_adaptor_class_string) alloc] init];
-        weak_self.myTransformationAdaptor = [[NSClassFromString(transformation_adaptor_class_string) alloc] init];
-        
-        // lookup the selector using vendor_key in myVendorSelector tree -
-        NSError *xpath_error;
-        NSString *selector_xpath_string = [NSString stringWithFormat:@".//record[@vendor_key='%@']/@selector",vendorKey];
-        NSArray *selector_array = [[weak_self myCodeGenerationConfigurationTree] nodesForXPath:selector_xpath_string error:&xpath_error];
-        
-        NSString *selector_string = @"generateSBMLFileFromVFFWithOptions:";
-        NSLog(@"Monkey ...%@",selector_string);
+        NSString *selector_string = vendorKey;
         if (selector_string!=nil)
         {
             // get the selector -
             SEL code_transformation_selector = NSSelectorFromString(selector_string);
-            
+        
             // does the language adaptor have this selector?
-            if ([[weak_self myTransformationAdaptor] respondsToSelector:code_transformation_selector] == YES)
+            if ([transformationAdaptor respondsToSelector:code_transformation_selector] == YES)
             {
                 // ok, so we need to set the language adaptor reference *on* my transformation adaptor
                 // so we know what language to generate the code in
-                [[weak_self myTransformationAdaptor] setMyLanguageAdaptor:[self myLanguageAdaptor]];
-                [[weak_self myTransformationAdaptor] setMyTransformationName:transformationName];
+                [transformationAdaptor setMyTransformationName:transformationName];
                 
                 //specify the function pointer
                 typedef NSString* (*methodPtr)(id, SEL,NSDictionary*);
                 
                 //get the actual method
-                methodPtr command = (methodPtr)[[weak_self myTransformationAdaptor] methodForSelector:code_transformation_selector];
+                methodPtr command = (methodPtr)[transformationAdaptor methodForSelector:code_transformation_selector];
                 
                 //run the method
-                NSString *code_block = command([weak_self myTransformationAdaptor],code_transformation_selector,options);
+                NSString *code_block = command(transformationAdaptor,code_transformation_selector,options);
                 [buffer appendString:code_block];
             }
             else

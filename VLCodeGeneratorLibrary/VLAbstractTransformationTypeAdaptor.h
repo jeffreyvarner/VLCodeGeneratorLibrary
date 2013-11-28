@@ -7,9 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "VLAbstractLanguageAdaptor.h"
-
-@class VLMatlabLanguageAdaptor;
 
 @interface VLAbstractTransformationTypeAdaptor : NSObject
 {
@@ -17,7 +14,6 @@
 }
 
 // properties -
-@property (strong) VLAbstractLanguageAdaptor *myLanguageAdaptor;
 @property (strong) NSString *myTransformationName;
 
 // lifecycle
@@ -44,20 +40,6 @@
 // make -
 -(NSString *)generateModelMakeFileBufferWithOptions:(NSDictionary *)options;
 -(NSString *)generateModelSolveModelScriptBufferWithOptions:(NSDictionary *)options;
-
-// matrix routines -
--(NSString *)generateModelStoichiometricMatrixBufferWithOptions:(NSDictionary *)options;
--(NSString *)generateModelCirculationMatrixBufferWithOptions:(NSDictionary *)options;
--(NSString *)generateModelInitialConditonsBufferWithOptions:(NSDictionary *)options;
--(NSString *)generateModelParametersBufferWithOptions:(NSDictionary *)options;
--(NSString *)generateModelCompartmentVolumeBufferWithOptions:(NSDictionary *)options;
-
-// general methods
--(NSUInteger)calculateNumberOfStatesInModelTree:(NSXMLDocument *)model_tree;
--(NSUInteger)calculateNumberOfRatesInModelTree:(NSXMLDocument *)model_tree;
--(NSUInteger)calculateNumberOfCompartmentsInModelTree:(NSXMLDocument *)model_tree;
--(NSUInteger)calculateNumberOfSpeciesInModelTree:(NSXMLDocument *)model_tree;
--(NSUInteger)calculateNumberOfParametersInModelTree:(NSXMLDocument *)model_tree;
 
 // debug methods -
 -(NSString *)generateModelDebugBufferWithOptions:(NSDictionary *)options;
